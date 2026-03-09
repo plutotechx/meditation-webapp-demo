@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Update Daily Meditation</title>
-  <!-- UpdatedAt: 2026-03-09 21:05 (+07:00) -->
+  <!-- UpdatedAt: 2026-03-10 20:20 (+07:00) -->
   <style>
     :root{
       --bg:#0b1220; --card:rgba(255,255,255,.08); --border:rgba(255,255,255,.12);
@@ -24,20 +24,10 @@
     .wrap{max-width:820px;margin:0 auto;padding:24px}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
 
-    /* ===== Header Center ===== */
-    .headerCenter{
-      text-align:center;
-      display:grid;
-      gap:6px;
-      margin-bottom:16px;
-    }
+    .headerCenter{ text-align:center; display:grid; gap:6px; margin-bottom:16px; }
     h1{margin:0;font-size:22px}
     .muted{color:var(--muted);margin:0;line-height:1.55}
-    #weekHeader{
-      margin:0;
-      color:rgba(234,240,255,.78);
-      font-weight:800;
-    }
+    #weekHeader{ margin:0; color:rgba(234,240,255,.78); font-weight:800; }
 
     label{display:block;margin:12px 0 6px}
     select,input{
@@ -64,12 +54,7 @@
     .msg.ok{color:var(--ok)}
     .msg.bad{color:var(--danger)}
 
-    .small{
-      font-size:12px;
-      color:var(--muted);
-      margin-top:10px;
-      text-align:center;
-    }
+    .small{ font-size:12px; color:var(--muted); margin-top:10px; text-align:center; }
 
     a.linkbtn{display:block;text-decoration:none}
     a.linkbtn button{
@@ -81,33 +66,20 @@
 
     /* ===== Success Popup ===== */
     .success-overlay{
-      position: fixed;
-      inset: 0;
-      display: none;
-      place-items: center;
+      position: fixed; inset: 0;
+      display: none; place-items: center;
       background: var(--overlay);
       z-index: 9999;
     }
-    .success-overlay.is-open{
-      display: grid;
-      animation: overlayIn .18s ease-out forwards;
-    }
-    @keyframes overlayIn{
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
+    .success-overlay.is-open{ display:grid; animation: overlayIn .18s ease-out forwards; }
+    @keyframes overlayIn{ from { opacity: 0; } to { opacity: 1; } }
 
     .success-card{
       width: min(640px, 92vw);
       border-radius: 14px;
-      background: linear-gradient(180deg,
-        rgba(54, 74, 86, .58),
-        rgba(25, 33, 41, .62)
-      );
+      background: linear-gradient(180deg, rgba(54, 74, 86, .58), rgba(25, 33, 41, .62));
       border: 1px solid var(--card-border);
-      box-shadow:
-        0 18px 55px rgba(0,0,0,.55),
-        inset 0 0 0 1px rgba(255,255,255,.05);
+      box-shadow: 0 18px 55px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.05);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       position: relative;
@@ -119,23 +91,20 @@
       opacity: 0;
       animation: cardIn .22s ease-out forwards;
     }
-    @keyframes cardIn{
-      to { transform: translateY(0) scale(1); opacity: 1; }
-    }
+    @keyframes cardIn{ to { transform: translateY(0) scale(1); opacity: 1; } }
 
     .success-close{
       position:absolute;
-      top:12px;
-      right:12px;
-      width:44px;height:44px;
+      top:12px; right:12px;
+      width:48px;height:48px;
       border-radius:999px;
       border:1px solid rgba(255,255,255,.22);
       background:rgba(255,255,255,.92);
-      color:#ff3b3b; /* red X */
+      color:#ff2d2d; /* red X */
       display:grid;place-items:center;
       cursor:pointer;
       box-shadow:0 12px 26px rgba(0,0,0,.28);
-      font-size:22px;
+      font-size:24px;
       font-weight:1000;
       line-height:1;
     }
@@ -177,7 +146,9 @@
       gap: 12px;
       margin-top: 6px;
     }
-    @media (max-width: 520px){ .afterSaveGrid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    @media (max-width: 520px){
+      .afterSaveGrid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
 
     .sbox{
       border-radius: 14px;
@@ -352,7 +323,6 @@
         </div>
         <p id="successText" class="success-text">บันทึกข้อมูลเรียบร้อย</p>
 
-        <!-- Status boxes (no time, only done/not done) -->
         <div id="afterSaveGrid" class="afterSaveGrid" hidden>
           <div class="sbox" id="boxS1">
             <div class="sboxTop"><span>ครั้งที่ 1</span><span class="sicon" id="iconS1">✕</span></div>
@@ -374,7 +344,6 @@
             <div class="sboxSum" id="sumText">0/3</div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -384,6 +353,7 @@
   // Week header (local)
   // =========================
   const weekHeaderEl = document.getElementById("weekHeader");
+
   function pad2(n){ return String(n).padStart(2,"0"); }
   function toISODateLocal(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
   function thaiDateLabelLocal(d){
@@ -449,6 +419,7 @@
         opt.disabled = true;
         opt.textContent = `${label} (ยังมาไม่ถึง)`;
       }
+
       logDateEl.appendChild(opt);
     }
 
@@ -465,10 +436,13 @@
 
     weekdayHiddenEl.value = logDateEl.selectedOptions[0]?.dataset?.dow || "";
   }
+
   logDateEl.addEventListener("change", () => {
     const sel = logDateEl.selectedOptions[0];
     weekdayHiddenEl.value = sel?.dataset?.dow || "";
   });
+
+  // ✅ สำคัญ: ต้องเรียกจริง
   buildLogDateOptions7DaysNoPast();
 
   // =========================
@@ -477,6 +451,7 @@
   (function(){
     const overlay = document.getElementById('successOverlay');
     const textEl  = document.getElementById('successText');
+    const closeBtn = document.getElementById('successClose');
     let autoTimer = null;
 
     const POPUP_MS = 12000; // 10–15s
@@ -486,6 +461,7 @@
       textEl.textContent = message;
       overlay.classList.add('is-open');
       overlay.setAttribute('aria-hidden', 'false');
+
       hideAfterSaveGrid();
 
       clearTimeout(autoTimer);
@@ -497,7 +473,6 @@
       overlay.setAttribute('aria-hidden', 'true');
     };
 
-    const closeBtn = document.getElementById('successClose');
     if (closeBtn){
       closeBtn.addEventListener('click', () => {
         clearTimeout(autoTimer);
@@ -523,6 +498,7 @@
     const grid = document.getElementById("afterSaveGrid");
     if (grid) grid.hidden = true;
   }
+
   function markSVG(done){
     if (done){
       return `<span class="mark ok" aria-label="ทำแล้ว">
@@ -538,13 +514,14 @@
     </span>`;
   }
 
-  function renderAfterSaveBoxes({ s1, s2, s3, doneCount }){
+  function renderAfterSaveBoxes(st){
     showAfterSaveGrid();
 
     const setBox = (key, done) => {
       const box = document.getElementById("box" + key.toUpperCase());
       const icon = document.getElementById("icon" + key.toUpperCase());
       const slot = document.getElementById("mark" + key.toUpperCase());
+      if (!box || !icon || !slot) return;
 
       const clsOk = done ? "ok" : "no";
       box.classList.remove("ok","no");
@@ -554,31 +531,29 @@
       slot.innerHTML = markSVG(done);
     };
 
-    setBox("s1", !!s1.done);
-    setBox("s2", !!s2.done);
-    setBox("s3", !!s3.done);
+    setBox("s1", !!st.sessions.s1.done);
+    setBox("s2", !!st.sessions.s2.done);
+    setBox("s3", !!st.sessions.s3.done);
 
     const sumEl = document.getElementById("sumText");
-    if (sumEl) sumEl.textContent = `${doneCount}/3`;
+    if (sumEl) sumEl.textContent = `${st.doneCount}/3`;
   }
 
-  
-  // Normalize status from either:
-  // - GAS submit returns: {status:{doneCount, sessions:{s1:{done,time},...}}}
-  // - GAS checkStatus returns: sessions:{s1:{mark:"✅",time:""},...}
-  // - legacy: sessions:{s1:"✅",...}
+  // =========================
+  // Normalize status payload
+  // =========================
   function normalizeStatusPayload(raw){
     const empty = { doneCount:0, sessions:{ s1:{done:false}, s2:{done:false}, s3:{done:false} } };
     if (!raw) return empty;
 
-    // If already in {doneCount, sessions:{s1:{done}}} form
+    // {doneCount, sessions:{s1:{done}}}
     if (raw.sessions && raw.sessions.s1 && typeof raw.sessions.s1 === "object" && ("done" in raw.sessions.s1)){
       const s = raw.sessions;
       const dc = (raw.doneCount != null) ? raw.doneCount : [s.s1.done,s.s2.done,s.s3.done].filter(Boolean).length;
       return { doneCount: dc, sessions:{ s1:{done:!!s.s1.done}, s2:{done:!!s.s2.done}, s3:{done:!!s.s3.done} } };
     }
 
-    // If GAS checkStatus returns sessions:{s1:{mark:"✅"}}
+    // checkStatus: sessions:{s1:{mark:"✅"}}
     if (raw.sessions && raw.sessions.s1 && typeof raw.sessions.s1 === "object" && ("mark" in raw.sessions.s1)){
       const s = raw.sessions;
       const toDone = (x)=> String((x && x.mark) || "") === "✅";
@@ -587,7 +562,7 @@
       return { doneCount: dc, sessions: ss };
     }
 
-    // If legacy strings sessions:{s1:"✅"}
+    // legacy sessions:{s1:"✅"}
     if (raw.sessions && typeof raw.sessions.s1 === "string"){
       const toDone = (v)=> String(v||"") === "✅";
       const ss = { s1:{done:toDone(raw.sessions.s1)}, s2:{done:toDone(raw.sessions.s2)}, s3:{done:toDone(raw.sessions.s3)} };
@@ -598,19 +573,12 @@
     return empty;
   }
 
-async function fetchCheckStatus(name, logDate){
+  async function fetchCheckStatus(name, logDate){
     const url = `/api/checkStatus?name=${encodeURIComponent(name)}&logDate=${encodeURIComponent(logDate)}`;
     const res = await fetch(url, { cache:"no-store" });
     const out = await res.json().catch(()=>({}));
     if (!res.ok || !out.ok) throw new Error(out.error || "checkStatus_failed");
     return normalizeStatusPayload(out);
-  };
-
-    const s1 = toObj(raw.s1);
-    const s2 = toObj(raw.s2);
-    const s3 = toObj(raw.s3);
-    const doneCount = (out.doneCount != null) ? out.doneCount : ([s1.done,s2.done,s3.done].filter(Boolean).length);
-    return { s1, s2, s3, doneCount };
   }
 
   // =========================
@@ -640,23 +608,19 @@ async function fetchCheckStatus(name, logDate){
       });
       const out = await res.json().catch(() => ({}));
 
-      // Prefer status returned from submit (fast + cross-device)
-
       if (res.ok && out.ok) {
         msg.className = "msg ok";
         msg.textContent = "บันทึกข้อมูลเรียบร้อย ✅";
 
         window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
 
-        // show marks: prefer submit response.status (fastest); fallback to checkStatus
+        // ✅ status: prefer submit response (fastest), fallback checkStatus
         try{
-          const st = out && out.status ? normalizeStatusPayload(out.status) : await fetchCheckStatus(payload.name, payload.logDate);
-          renderAfterSaveBoxes({ 
-            s1: st.sessions.s1, 
-            s2: st.sessions.s2, 
-            s3: st.sessions.s3, 
-            doneCount: st.doneCount 
-          });
+          const st = (out && out.status)
+            ? normalizeStatusPayload(out.status)
+            : await fetchCheckStatus(payload.name, payload.logDate);
+
+          renderAfterSaveBoxes(st);
         } catch(err){
           console.warn("status error:", err);
           hideAfterSaveGrid();
