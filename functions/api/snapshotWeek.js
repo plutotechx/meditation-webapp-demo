@@ -1,4 +1,4 @@
-import { getEnv, withAction, json } from "./_util";
+import { getEnv, withAction, json } from "./_util.js";
 
 export async function onRequestGet(ctx) {
   try {
