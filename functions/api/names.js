@@ -1,29 +1,35 @@
-import { json } from "./_util.js";
-
 const CACHE_TTL_SECONDS = 600; // 10 นาที
 const FETCH_TIMEOUT_MS = 7000; // 7 วินาที
+
+function jsonResponse(data, status = 200, extraHeaders = {}) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      ...extraHeaders,
+    },
+  });
+}
 
 export async function onRequestGet(context) {
   const { env, request } = context;
 
   try {
     if (!env.GAS_URL || !env.SECRET) {
-      return json({ ok: false, error: "missing_env" }, 500);
+      return jsonResponse({ ok: false, error: "missing_env" }, 500);
     }
 
-    // ทำ cache key ของ endpoint นี้
     const cache = caches.default;
     const cacheKey = new Request(new URL(request.url).toString(), {
       method: "GET",
     });
 
-    // 1) ลองอ่านจาก cache ก่อน
+    // อ่านจาก cache ก่อน
     const cached = await cache.match(cacheKey);
     if (cached) {
       return cached;
     }
 
-    // 2) เรียก GAS แบบมี timeout
     const url = new URL(env.GAS_URL);
     url.searchParams.set("action", "names");
     url.searchParams.set("secret", env.SECRET);
@@ -45,23 +51,21 @@ export async function onRequestGet(context) {
     }
 
     if (!res.ok || out.ok === false) {
-      return json(
+      return jsonResponse(
         { ok: false, error: out.error || `upstream_${res.status}` },
         500
       );
     }
 
-    // 3) สร้าง response พร้อม cache header
-    const response = json(out, 200, {
+    const response = jsonResponse(out, 200, {
       "Cache-Control": `public, max-age=${CACHE_TTL_SECONDS}, s-maxage=${CACHE_TTL_SECONDS}`,
     });
 
-    // 4) เก็บเข้า Cloudflare cache
     context.waitUntil(cache.put(cacheKey, response.clone()));
-
     return response;
+
   } catch (e) {
     const msg = e && e.name === "AbortError" ? "gas_timeout" : String(e);
-    return json({ ok: false, error: msg }, 500);
+    return jsonResponse({ ok: false, error: msg }, 500);
   }
 }
