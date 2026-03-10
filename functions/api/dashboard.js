@@ -1,3 +1,5 @@
+import { json } from "./_util.js";
+
 export async function onRequestGet({ request, env }) {
   try {
     const u = new URL(request.url);
@@ -19,11 +21,4 @@ export async function onRequestGet({ request, env }) {
   } catch (e) {
     return json({ ok: false, error: String(e) }, 500);
   }
-}
-
-function json(obj, status = 200) {
-  return new Response(JSON.stringify(obj), {
-    status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-  });
 }
