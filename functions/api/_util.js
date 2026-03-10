@@ -1,24 +1,56 @@
-export function getEnv(ctx, key) {
-  const v = ctx.env?.[key] ?? ctx.cloudflare?.env?.[key] ?? undefined;
-  if (!v) throw new Error(`missing_env:${key}`);
-  return v;
-}
+import { json } from "./_util.js";
 
-export function withAction(gasUrl, action, secret) {
-  const u = new URL(gasUrl);
-  u.search = "";
-  u.searchParams.set("action", action);
-  u.searchParams.set("secret", secret);
-  return u.toString();
-}
+const FETCH_TIMEOUT_MS = 7000;
+const CACHE_TTL_SECONDS = 600;
 
-export function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      "Cache-Control": "no-store",
-      "Access-Control-Allow-Origin": "*",
-    },
-  });
+export async function onRequestGet({ env, request }) {
+  try {
+    if (!env.GAS_URL || !env.SECRET) {
+      return json({ ok: false, error: "missing_env" }, 500);
+    }
+
+    // ---- Cache ----
+    const cache = caches.default;
+    const cacheKey = new Request(new URL(request.url).toString());
+    const cached = await cache.match(cacheKey);
+    if (cached) return cached;
+
+    // ---- Fetch with timeout ----
+    const url = new URL(env.GAS_URL);
+    url.searchParams.set("action", "names");
+    url.searchParams.set("secret", env.SECRET);
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+    let res, out;
+    try {
+      res = await fetch(url.toString(), {
+        method: "GET",
+        signal: controller.signal,
+      });
+      out = await res.json().catch(() => ({}));
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (!res.ok || out.ok === false) {
+      return json({ ok: false, error: out.error || `upstream_${res.status}` }, 500);
+    }
+
+    // ---- Store cache ----
+    const response = new Response(JSON.stringify(out), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": `public, max-age=${CACHE_TTL_SECONDS}`,
+      },
+    });
+    waitUntil(cache.put(cacheKey, response.clone()));
+    return response;
+
+  } catch (e) {
+    const msg = e?.name === "AbortError" ? "gas_timeout" : String(e);
+    return json({ ok: false, error: msg }, 500);
+  }
 }
