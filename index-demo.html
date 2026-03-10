@@ -30,10 +30,8 @@
       line-height: 1.6;
     }
 
-    /* ---- LAYOUT ---- */
     .page { max-width: 720px; margin: 0 auto; padding: 32px 16px 72px; }
 
-    /* ---- HEADER ---- */
     .header { text-align:center; margin-bottom: 28px; }
     .hicon {
       width:52px; height:52px; border-radius:14px;
@@ -50,14 +48,12 @@
       font-size:13px; font-weight:800; color:var(--accent);
     }
 
-    /* ---- CARD ---- */
     .card {
       background:var(--surface); border:1px solid var(--border);
       border-radius:var(--r); box-shadow:var(--sh); overflow:hidden;
     }
     .card-body { padding:24px; }
 
-    /* ---- STATUS STRIP ---- */
     .strip {
       display:flex; align-items:center; gap:12px;
       padding:13px 20px;
@@ -74,7 +70,6 @@
     .strip-lbl { font-size:13px; color:var(--muted); font-weight:600; }
     .strip-cnt { margin-left:auto; font-size:13px; font-weight:900; }
 
-    /* ---- FORM ELEMENTS ---- */
     .frow { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     @media(max-width:500px){ .frow{grid-template-columns:1fr} }
     .field + .field { margin-top:18px; }
@@ -98,13 +93,10 @@
     select:disabled { opacity:.4; cursor:not-allowed; }
     select option:disabled { color:#4b5563; }
 
-    /* ---- DIVIDER ---- */
     .div { height:1px; background:var(--border2); margin:22px 0; }
 
-    /* ---- SECTION TITLE ---- */
     .sec-title { font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; margin-bottom:12px; }
 
-    /* ---- SESSION BUTTONS ---- */
     .sess-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
     @media(max-width:480px){ .sess-grid{grid-template-columns:1fr} }
 
@@ -129,7 +121,6 @@
     .badge.g { background:rgba(34,197,94,.14); color:var(--green); }
     .badge.b { background:rgba(91,156,246,.13); color:var(--accent); }
 
-    /* ---- NOTICE ---- */
     .notice {
       display:flex; align-items:center; gap:9px;
       border-radius:10px; padding:11px 14px; margin-top:16px;
@@ -147,7 +138,6 @@
     }
     @keyframes spin { to{transform:rotate(360deg)} }
 
-    /* ---- ACTIONS ---- */
     .btn-row { margin-top:22px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
     .btn-submit {
       flex:1; min-width:140px; border:none; border-radius:12px;
@@ -167,7 +157,6 @@
     .hint { font-size:12px; color:var(--muted); margin-top:12px; line-height:1.65; }
     .hint b { color:rgba(232,240,255,.65); }
 
-    /* ---- SUCCESS OVERLAY ---- */
     .overlay {
       position:fixed; inset:0; z-index:9999;
       display:grid; place-items:center;
@@ -226,8 +215,6 @@
 <body>
 
 <div class="page">
-
-  <!-- Header -->
   <div class="header">
     <div class="hicon">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
@@ -240,10 +227,7 @@
     <span class="week-badge" id="weekBadge">...</span>
   </div>
 
-  <!-- Main Card -->
   <div class="card">
-
-    <!-- Status strip -->
     <div class="strip" id="strip" style="display:none">
       <div class="dots">
         <div class="dot" id="d1"></div>
@@ -255,8 +239,6 @@
     </div>
 
     <div class="card-body">
-
-      <!-- Name + Date -->
       <div class="frow">
         <div>
           <label for="selName">ชื่อ – ชื่อเล่น</label>
@@ -272,7 +254,6 @@
         </div>
       </div>
 
-      <!-- Duration -->
       <div class="field" style="margin-top:18px">
         <label for="selDur">ระยะเวลาต่อรอบ</label>
         <select id="selDur">
@@ -284,18 +265,15 @@
 
       <div class="div"></div>
 
-      <!-- Session picker -->
       <div class="sec-title">เลือกช่วงเวลาที่ต้องการบันทึก</div>
       <div class="sess-grid" id="sessGrid"></div>
       <input type="hidden" id="hidSess" />
 
-      <!-- Notice -->
       <div class="notice info" id="notice">
         <span class="n-icon">💡</span>
         <span id="noticeMsg">เลือกรายชื่อและวันที่ ระบบจะเช็กสถานะให้อัตโนมัติ</span>
       </div>
 
-      <!-- Submit -->
       <div class="btn-row">
         <button class="btn-submit" id="btnSubmit" disabled type="button">บันทึกข้อมูล</button>
         <a class="btn-link" href="/status.html">ตรวจสอบสถานะ →</a>
@@ -305,13 +283,10 @@
         <b>กัน backdating:</b> วันที่ผ่านมาและอนาคตถูกล็อกไว้ บันทึกได้เฉพาะ<b>วันนี้</b>เท่านั้น
         · รอบ <b style="color:var(--green)">สีเขียว</b> = ทำแล้ว (ล็อก) · รอบ <b style="color:var(--accent)">สีฟ้า</b> = ยังไม่ได้ทำ
       </p>
-
     </div>
   </div>
-
 </div>
 
-<!-- Success Overlay -->
 <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-hidden="true">
   <div class="ov-card">
     <div class="ov-ring">
@@ -322,8 +297,8 @@
       </div>
     </div>
     <div class="ov-title" id="ovTitle">บันทึกสำเร็จ!</div>
-    <div class="ov-sub"   id="ovSub">ข้อมูลถูกบันทึกเรียบร้อยแล้ว</div>
-    <div class="ov-btn"   id="ovBtn" tabindex="0" role="button">ตกลง</div>
+    <div class="ov-sub" id="ovSub">ข้อมูลถูกบันทึกเรียบร้อยแล้ว</div>
+    <div class="ov-btn" id="ovBtn" tabindex="0" role="button">ตกลง</div>
   </div>
 </div>
 
@@ -332,10 +307,14 @@
    CONFIG
 ============================================================ */
 const API = {
-  names:       "/api/names",
+  names: "/api/names",
   checkStatus: "/api/checkStatus",
-  submit:      "/api/submit"
+  submit: "/api/submit"
 };
+
+const NAME_CACHE_KEY = "meditation_names_cache_v1";
+const NAME_CACHE_TTL = 1000 * 60 * 60 * 12; // 12 ชั่วโมง
+const NAMES_TIMEOUT_MS = 8000;
 
 const SESSIONS = [
   { label:"ครั้งที่ 1", sub:"ตื่นนอน – ช่วงเช้า"  },
@@ -348,10 +327,10 @@ const DOW_TH = ["อาทิตย์","จันทร์","อังคาร
 /* ============================================================
    STATE
 ============================================================ */
-let status        = null;   // last checkStatus response
-let selectedSess  = "";     // "ครั้งที่ 1" / "ครั้งที่ 2" / "ครั้งที่ 3"
-let loading       = false;
-let pendingId     = 0;
+let status = null;
+let selectedSess = "";
+let loading = false;
+let pendingId = 0;
 
 /* ============================================================
    HELPERS
@@ -369,34 +348,95 @@ function thaiShort(d){
 }
 
 function mondayOf(d){
-  const x = new Date(d); x.setHours(0,0,0,0);
+  const x = new Date(d);
+  x.setHours(0,0,0,0);
   const day = x.getDay();
   x.setDate(x.getDate() - (day===0 ? 6 : day-1));
   return x;
 }
 
 function esc(s){
-  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  return String(s).replace(/[&<>"']/g,m=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[m]));
 }
 
 async function fetchJson(url, opts={}){
-  const res  = await fetch(url, opts);
+  const res = await fetch(url, opts);
   const data = await res.json().catch(()=>({}));
   if (!res.ok || data.ok===false){
     const e = new Error(data.error || `http_${res.status}`);
-    e.payload = data; throw e;
+    e.payload = data;
+    throw e;
   }
   return data;
 }
 
-/* --- notice --- */
+async function fetchJsonWithTimeout(url, opts = {}, timeoutMs = 8000){
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+
+  try{
+    return await fetchJson(url, { ...opts, signal: ctrl.signal });
+  }finally{
+    clearTimeout(t);
+  }
+}
+
+/* ---------- name cache ---------- */
+function getCachedNames(){
+  try{
+    const raw = localStorage.getItem(NAME_CACHE_KEY);
+    if (!raw) return [];
+    const obj = JSON.parse(raw);
+    if (!obj || !Array.isArray(obj.names)) return [];
+    if (!obj.ts || (Date.now() - obj.ts > NAME_CACHE_TTL)) return [];
+    return obj.names.filter(Boolean);
+  }catch{
+    return [];
+  }
+}
+
+function setCachedNames(names){
+  try{
+    const clean = Array.from(new Set((names || [])
+      .map(x => String(x).trim())
+      .filter(Boolean)));
+    localStorage.setItem(NAME_CACHE_KEY, JSON.stringify({
+      ts: Date.now(),
+      names: clean
+    }));
+  }catch{}
+}
+
+function renderNameOptions(names){
+  const current = $("selName").value || "";
+  const clean = Array.from(new Set((names || [])
+    .map(x => String(x).trim())
+    .filter(Boolean)))
+    .sort((a,b) => a.localeCompare(b, "th"));
+
+  $("selName").innerHTML =
+    `<option value="">— เลือกชื่อ —</option>` +
+    clean.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
+
+  if (current && clean.includes(current)) {
+    $("selName").value = current;
+  }
+}
+
+/* ---------- notice ---------- */
 function setNotice(type, msg, spin=false){
   const icons = {info:"💡", success:"✅", warn:"⚠️", error:"❌"};
   const el = $("notice");
   el.className = `notice ${type}`;
   $("noticeMsg").textContent = msg;
   const ico = el.querySelector(".n-icon");
-  ico.innerHTML = spin ? '<div class="spinner"></div>' : (icons[type]||"💡");
+  ico.innerHTML = spin ? '<div class="spinner"></div>' : (icons[type] || "💡");
 }
 
 /* ============================================================
@@ -405,27 +445,30 @@ function setNotice(type, msg, spin=false){
 function renderWeekBadge(){
   const now = new Date();
   const mon = mondayOf(now);
-  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
-  $("weekBadge").textContent =
-    `จ ${thaiShort(mon)} – อา ${thaiShort(sun)}`;
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate()+6);
+  $("weekBadge").textContent = `จ ${thaiShort(mon)} – อา ${thaiShort(sun)}`;
 }
 
 /* ============================================================
-   DATE DROPDOWN  — จ–อา สัปดาห์นี้, กัน backdating & future
+   DATE DROPDOWN
 ============================================================ */
 function buildDateDropdown(){
-  const now      = new Date();
+  const now = new Date();
   const todayISO = toISO(now);
-  const mon      = mondayOf(now);
-  const sel      = $("selDate");
-  sel.innerHTML  = "";
+  const mon = mondayOf(now);
+  const sel = $("selDate");
+  sel.innerHTML = "";
 
-  // placeholder
-  const ph = new Option("— เลือกวันที่ —", ""); ph.disabled=true; ph.selected=true;
+  const ph = new Option("— เลือกวันที่ —", "");
+  ph.disabled = true;
+  ph.selected = true;
   sel.add(ph);
 
   for (let i=0; i<7; i++){
-    const d   = new Date(mon); d.setDate(mon.getDate()+i);
+    const d = new Date(mon);
+    d.setDate(mon.getDate()+i);
+
     const iso = toISO(d);
     const dow = DOW_TH[d.getDay()];
     const lbl = `${dow}  ${thaiShort(d)}`;
@@ -434,13 +477,13 @@ function buildDateDropdown(){
 
     if (iso < todayISO){
       opt.textContent = `${lbl}  (ผ่านมาแล้ว)`;
-      opt.disabled    = true;
+      opt.disabled = true;
     } else if (iso > todayISO){
       opt.textContent = `${lbl}  (ยังมาไม่ถึง)`;
-      opt.disabled    = true;
+      opt.disabled = true;
     } else {
       opt.textContent = `${lbl}  ← วันนี้`;
-      opt.selected    = true;
+      opt.selected = true;
     }
     sel.add(opt);
   }
@@ -450,18 +493,24 @@ function buildDateDropdown(){
    STATUS STRIP
 ============================================================ */
 function renderStrip(){
-  if (!status){ $("strip").style.display="none"; return; }
-  $("strip").style.display="flex";
+  if (!status){
+    $("strip").style.display = "none";
+    return;
+  }
+
+  $("strip").style.display = "flex";
   const done = status.doneCount || 0;
-  const sess = status.sessions  || {};
+  const sess = status.sessions || {};
+
   ["s1","s2","s3"].forEach((k,i)=>{
     const dot = $(`d${i+1}`);
-    dot.className = "dot" +
-      (sess[k]?.done ? " done" : (i===done && done<3 ? " active" : ""));
+    dot.className = "dot" + (sess[k]?.done ? " done" : (i===done && done<3 ? " active" : ""));
   });
+
   $("stripLbl").textContent =
     done>=3 ? "ครบทั้ง 3 รอบแล้ว 🎉" :
     done===0 ? "ยังไม่ได้ทำ" : `ทำแล้ว ${done} รอบ`;
+
   $("stripCnt").textContent = `${done} / 3`;
 }
 
@@ -472,7 +521,6 @@ function renderSessGrid(){
   const grid = $("sessGrid");
   grid.innerHTML = "";
 
-  // build done map: s1→label, s2→label, s3→label
   const doneMap = {};
   if (status?.sessions){
     Object.entries(status.sessions).forEach(([k,v])=>{
@@ -481,20 +529,19 @@ function renderSessGrid(){
     });
   }
 
-  // auto-pick first available
   if (!selectedSess || doneMap[selectedSess]?.done){
-    selectedSess = SESSIONS.find(s=>!doneMap[s.label]?.done)?.label || "";
+    selectedSess = SESSIONS.find(s => !doneMap[s.label]?.done)?.label || "";
   }
   $("hidSess").value = selectedSess;
 
   SESSIONS.forEach(sess=>{
-    const info   = doneMap[sess.label] || {done:false};
+    const info = doneMap[sess.label] || {done:false};
     const isDone = !!info.done;
-    const isSel  = !isDone && selectedSess===sess.label;
+    const isSel = !isDone && selectedSess === sess.label;
 
     const btn = document.createElement("button");
-    btn.type      = "button";
-    btn.className = "sess-btn" + (isDone?" done":"") + (isSel?" sel":"");
+    btn.type = "button";
+    btn.className = "sess-btn" + (isDone ? " done" : "") + (isSel ? " sel" : "");
     if (isDone) btn.disabled = true;
 
     btn.innerHTML = `
@@ -502,7 +549,7 @@ function renderSessGrid(){
       <div class="sub">${esc(sess.sub)}</div>
       <div>${
         isDone
-          ? `<span class="badge g">✓ ${esc(info.time||"--:--")} น.</span>`
+          ? `<span class="badge g">✓ ${esc(info.time || "--:--")} น.</span>`
           : `<span class="badge b">เลือก</span>`
       }</div>`;
 
@@ -514,6 +561,7 @@ function renderSessGrid(){
         syncBtn();
       });
     }
+
     grid.appendChild(btn);
   });
 }
@@ -525,10 +573,11 @@ function syncBtn(){
   const ok =
     !!$("selName").value &&
     !!$("selDate").value &&
-    !!$("selDur").value  &&
-    !!selectedSess       &&
-    !loading             &&
-    (status?.doneCount||0) < 3;
+    !!$("selDur").value &&
+    !!selectedSess &&
+    !loading &&
+    (status?.doneCount || 0) < 3;
+
   $("btnSubmit").disabled = !ok;
 }
 
@@ -536,18 +585,43 @@ function syncBtn(){
    LOAD NAMES
 ============================================================ */
 async function loadNames(){
-  try {
-    const data  = await fetchJson(API.names);
+  const cached = getCachedNames();
+
+  if (cached.length){
+    renderNameOptions(cached);
+    setNotice("info", "โหลดรายชื่อจากข้อมูลเดิมก่อน แล้วกำลังอัปเดตข้อมูลใหม่...");
+  } else {
+    $("selName").innerHTML = `<option value="">กำลังโหลดรายชื่อ...</option>`;
+    setNotice("info", "กำลังโหลดรายชื่อ...", true);
+  }
+
+  try{
+    const data = await fetchJsonWithTimeout(API.names, {}, NAMES_TIMEOUT_MS);
     const names = Array.isArray(data.names) ? data.names : [];
-    $("selName").innerHTML =
-      `<option value="">— เลือกชื่อ —</option>` +
-      names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");
-    if (!names.length)
-      setNotice("warn","โหลดรายชื่อสำเร็จ แต่ไม่มีข้อมูล — กรุณาเพิ่มรายชื่อใน GAS Sheet");
+
+    if (!names.length){
+      if (cached.length){
+        setNotice("warn", "ดึงรายชื่อใหม่ไม่เจอข้อมูล กำลังใช้รายชื่อเดิมที่เคยโหลดไว้");
+        return;
+      }
+      $("selName").innerHTML = `<option value="">ไม่มีรายชื่อ</option>`;
+      setNotice("warn", "โหลดรายชื่อสำเร็จ แต่ไม่มีข้อมูลในชีต People");
+      return;
+    }
+
+    renderNameOptions(names);
+    setCachedNames(names);
+    setNotice("info", "เลือกรายชื่อและวันที่ ระบบจะเช็กสถานะให้อัตโนมัติ");
   } catch(err){
     console.error("loadNames:", err);
-    $("selName").innerHTML = `<option value="">โหลดรายชื่อไม่สำเร็จ</option>`;
-    setNotice("error","โหลดรายชื่อไม่สำเร็จ กรุณารีเฟรชหน้า");
+
+    if (cached.length){
+      renderNameOptions(cached);
+      setNotice("warn", "โหลดรายชื่อใหม่ไม่สำเร็จ กำลังใช้ข้อมูลเดิมที่เคยโหลดไว้");
+    } else {
+      $("selName").innerHTML = `<option value="">โหลดรายชื่อไม่สำเร็จ</option>`;
+      setNotice("error", "โหลดรายชื่อไม่สำเร็จ กรุณารีเฟรชหน้า หรือตรวจ API /api/names");
+    }
   }
 }
 
@@ -555,40 +629,50 @@ async function loadNames(){
    LOAD STATUS
 ============================================================ */
 async function loadStatus(){
-  const name    = $("selName").value.trim();
+  const name = $("selName").value.trim();
   const logDate = $("selDate").value.trim();
+
   if (!name || !logDate){
-    status       = null; selectedSess = "";
-    renderSessGrid(); renderStrip();
-    setNotice("info","เลือกรายชื่อและวันที่ก่อน ระบบจะเช็กสถานะให้");
-    syncBtn(); return;
+    status = null;
+    selectedSess = "";
+    renderSessGrid();
+    renderStrip();
+    setNotice("info", "เลือกรายชื่อและวันที่ก่อน ระบบจะเช็กสถานะให้");
+    syncBtn();
+    return;
   }
 
   const rid = ++pendingId;
-  loading = true; syncBtn();
-  setNotice("info","กำลังเช็กสถานะ...", true);
+  loading = true;
+  syncBtn();
+  setNotice("info", "กำลังเช็กสถานะ...", true);
 
-  try {
-    const qs   = new URLSearchParams({name, logDate});
+  try{
+    const qs = new URLSearchParams({ name, logDate });
     const data = await fetchJson(`${API.checkStatus}?${qs}`);
     if (rid !== pendingId) return;
+
     status = data;
-    const done = data.doneCount||0;
+    const done = data.doneCount || 0;
+
     setNotice(
-      done>=3 ? "success" : "info",
-      done>=3
+      done >= 3 ? "success" : "info",
+      done >= 3
         ? "ทำครบทั้ง 3 รอบแล้ว ไม่ต้องบันทึกซ้ำ 🎉"
         : `ทำแล้ว ${done} รอบ เหลือ ${3-done} รอบ — เลือกรอบที่ต้องการ`
     );
   } catch(err){
-    if (rid!==pendingId) return;
+    if (rid !== pendingId) return;
     console.error("loadStatus:", err);
-    status = null; selectedSess = "";
-    setNotice("error","เช็กสถานะไม่สำเร็จ กรุณาลองใหม่");
+    status = null;
+    selectedSess = "";
+    setNotice("error", "เช็กสถานะไม่สำเร็จ กรุณาลองใหม่");
   } finally {
-    if (rid===pendingId){
+    if (rid === pendingId){
       loading = false;
-      renderSessGrid(); renderStrip(); syncBtn();
+      renderSessGrid();
+      renderStrip();
+      syncBtn();
     }
   }
 }
@@ -597,52 +681,77 @@ async function loadStatus(){
    SUBMIT
 ============================================================ */
 async function submitForm(){
-  const name    = $("selName").value.trim();
+  const name = $("selName").value.trim();
   const logDate = $("selDate").value.trim();
   const session = $("hidSess").value.trim();
-  const duration= $("selDur").value.trim();
+  const duration = $("selDur").value.trim();
   const weekday = $("selDate").selectedOptions[0]?.dataset?.dow || "";
 
-  if (!name||!logDate||!session||!duration){
-    setNotice("warn","กรุณาเลือกข้อมูลให้ครบก่อนกดบันทึก"); return;
+  if (!name || !logDate || !session || !duration){
+    setNotice("warn", "กรุณาเลือกข้อมูลให้ครบก่อนกดบันทึก");
+    return;
   }
 
-  const body = { name, logDate, session, duration, weekday,
-    clientNow:   new Date().toISOString(),
-    tzOffsetMin: new Date().getTimezoneOffset() };
+  const body = {
+    name,
+    logDate,
+    session,
+    duration,
+    weekday,
+    clientNow: new Date().toISOString(),
+    tzOffsetMin: new Date().getTimezoneOffset()
+  };
 
   $("btnSubmit").disabled = true;
-  setNotice("info","กำลังบันทึก...", true);
+  setNotice("info", "กำลังบันทึก...", true);
 
-  try {
+  try{
     const data = await fetchJson(API.submit, {
-      method:"POST", headers:{"Content-Type":"application/json"},
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
       body: JSON.stringify(body)
     });
 
     if (data.status) status = data.status;
+
     selectedSess = SESSIONS.find(s=>{
-      const k = `s${SESSIONS.findIndex(x=>x.label===s.label)+1}`;
+      const k = `s${SESSIONS.findIndex(x => x.label === s.label)+1}`;
       return !status?.sessions?.[k]?.done;
     })?.label || "";
 
-    renderSessGrid(); renderStrip();
-    setNotice("success",`บันทึก ${session} เรียบร้อย`);
-    showOverlay(`${name}`, `บันทึก${session}เรียบร้อยแล้ว ✨`);
+    renderSessGrid();
+    renderStrip();
+
+    if (data.duplicate) {
+      setNotice("warn", `รอบ ${session} เคยบันทึกไว้แล้ว ระบบไม่บันทึกซ้ำ`);
+      showOverlay(`${name}`, `รอบ ${session} เคยบันทึกไว้แล้ว ✅`);
+    } else {
+      setNotice("success", `บันทึก ${session} เรียบร้อย`);
+      showOverlay(`${name}`, `บันทึก ${session} เรียบร้อยแล้ว ✨`);
+    }
 
   } catch(err){
     console.error("submit:", err);
     const code = err.payload?.error || err.message || "";
-    if (code==="session_already_done"){
+
+    if (code === "session_already_done"){
       if (err.payload?.status) status = err.payload.status;
-      renderSessGrid(); renderStrip();
+      renderSessGrid();
+      renderStrip();
       setNotice("warn","รอบนี้บันทึกไปแล้ว กรุณาเลือกรอบสีฟ้า");
-    } else if (code==="already_completed_all_sessions"){
+    } else if (code === "already_completed_all_sessions"){
       if (err.payload?.status) status = err.payload.status;
-      renderSessGrid(); renderStrip();
+      renderSessGrid();
+      renderStrip();
       setNotice("success","ทำครบทั้ง 3 รอบแล้ว ไม่ต้องบันทึกซ้ำ");
-    } else if (code==="logDate_mismatch_server_local_day"){
+    } else if (code === "logDate_mismatch_server_local_day"){
       setNotice("error","วันที่ไม่ตรงกับวันปัจจุบัน ไม่สามารถบันทึกย้อนหลังได้");
+    } else if (code === "unknown_name"){
+      setNotice("error","ไม่พบรายชื่อนี้ในชีต People กรุณาตรวจสอบรายชื่อ");
+    } else if (code === "invalid_duration"){
+      setNotice("error","ระยะเวลาไม่ถูกต้อง กรุณาเลือกใหม่");
+    } else if (code === "invalid_session"){
+      setNotice("error","รอบที่เลือกไม่ถูกต้อง กรุณาเลือกใหม่");
     } else {
       setNotice("error","บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
     }
@@ -655,22 +764,33 @@ async function submitForm(){
    OVERLAY
 ============================================================ */
 let ovTimer = null;
+
 function showOverlay(title, sub){
   $("ovTitle").textContent = title;
-  $("ovSub").textContent   = sub;
+  $("ovSub").textContent = sub;
   const ov = $("overlay");
-  ov.classList.add("open"); ov.setAttribute("aria-hidden","false");
+  ov.classList.add("open");
+  ov.setAttribute("aria-hidden","false");
   clearTimeout(ovTimer);
   ovTimer = setTimeout(hideOverlay, 3200);
 }
+
 function hideOverlay(){
   const ov = $("overlay");
-  ov.classList.remove("open"); ov.setAttribute("aria-hidden","true");
+  ov.classList.remove("open");
+  ov.setAttribute("aria-hidden","true");
 }
+
 $("ovBtn").addEventListener("click", hideOverlay);
-$("ovBtn").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" ") hideOverlay(); });
-$("overlay").addEventListener("click", e=>{ if(e.target===$("overlay")) hideOverlay(); });
-document.addEventListener("keydown", e=>{ if(e.key==="Escape") hideOverlay(); });
+$("ovBtn").addEventListener("keydown", e=>{
+  if (e.key === "Enter" || e.key === " ") hideOverlay();
+});
+$("overlay").addEventListener("click", e=>{
+  if (e.target === $("overlay")) hideOverlay();
+});
+document.addEventListener("keydown", e=>{
+  if (e.key === "Escape") hideOverlay();
+});
 
 /* ============================================================
    INIT
@@ -685,7 +805,7 @@ document.addEventListener("keydown", e=>{ if(e.key==="Escape") hideOverlay(); })
 
   $("selName").addEventListener("change", loadStatus);
   $("selDate").addEventListener("change", loadStatus);
-  $("selDur").addEventListener("change",  syncBtn);
+  $("selDur").addEventListener("change", syncBtn);
   $("btnSubmit").addEventListener("click", submitForm);
 })();
 </script>
