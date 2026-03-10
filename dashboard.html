@@ -699,7 +699,7 @@
         </div>
         <div class="muted" style="margin-top:10px" id="pieText">กำลังคำนวณ...</div>
         <div class="cmpWrap" aria-label="compare">
-          <div class="cmpTitle">เทียบ “ครบ 3 ครั้ง” วันนี้ vs เมื่อวาน</div>
+          <div class="cmpTitle">เทียบ "ครบ 3 ครั้ง" วันนี้ vs เมื่อวาน</div>
           <div class="cmpGrid">
             <div class="cmpCol">
               <div class="cmpLbl" id="cmpTodayLabel">วันนี้</div>
@@ -718,7 +718,7 @@
 
             <div class="kpi">
         <div class="kpiHead">
-          <div class="label" id="weeklyCompleteLabel">สรุป “ครบ 3 ครั้ง” รายวัน</div>
+          <div class="label" id="weeklyCompleteLabel">สรุป "ครบ 3 ครั้ง" รายวัน</div>
           <div class="countBadge" id="weeklyCompleteMeta">-</div>
         </div>
         <div class="wkList" id="weeklyCompleteList">
@@ -1346,6 +1346,16 @@ function render(out){
     }
   }
 
+  // ====== Backoff config ======
+  const BACKOFF_BASE_MS = 60_000;    // 1 นาที (ปกติ)
+  const BACKOFF_MAX_MS  = 8 * 60_000; // 8 นาที (สูงสุด)
+  let errorStreak = 0;               // นับ error ติดต่อกัน
+
+  function nextBackoffMs() {
+    // 0 error=60s, 1=120s, 2=240s, 3+=480s
+    return Math.min(BACKOFF_BASE_MS * Math.pow(2, errorStreak), BACKOFF_MAX_MS);
+  }
+
   let inFlight = false;
   async function load(isAuto=false){
     if (inFlight) return;
@@ -1361,10 +1371,20 @@ function render(out){
 
       if (!res.ok || !out.ok){
         tbody.innerHTML = `<tr><td colspan="4" class="muted">โหลดไม่สำเร็จ: ${escapeHtml(out.error||"unknown_error")}</td></tr>`;
+        // error → backoff นานขึ้น
+        errorStreak = Math.min(errorStreak + 1, 3);
         return;
       }
+      // สำเร็จ → reset streak
+      errorStreak = 0;
       render(out);
       setLastUpdated();
+    } catch(e){
+      // network error → backoff ด้วย
+      errorStreak = Math.min(errorStreak + 1, 3);
+      if (!isAuto){
+        tbody.innerHTML = `<tr><td colspan="4" class="muted">โหลดไม่สำเร็จ: ${escapeHtml(String(e))}</td></tr>`;
+      }
     } finally{
       inFlight = false;
     }
@@ -1381,43 +1401,47 @@ function render(out){
     hideTip();
     load(false);
 
-    nextRefreshAt = Date.now() + REFRESH_MS;
+    // switch สัปดาห์ → reset streak + reschedule ทันที
+    errorStreak = 0;
+    scheduleNext();
   }
 
   btnThis.addEventListener("click", ()=> setActiveWeek(0));
   btnLast.addEventListener("click", ()=> setActiveWeek(-1));
 
-  let nextRefreshAt = Date.now() + REFRESH_MS;
   let refreshTimer = null;
 
-  function startAuto(){
+  function scheduleNext(){
     stopAuto();
-    nextRefreshAt = Date.now() + REFRESH_MS;
-
-    // initial load timestamp will be set after load()
-    refreshTimer = setInterval(async ()=>{
-      if (document.hidden) return;
-      await load(true);
-      nextRefreshAt = Date.now() + REFRESH_MS;
-      hideTip();
-    }, REFRESH_MS);
+    const delay = nextBackoffMs();
+    refreshTimer = setTimeout(async ()=>{
+      if (!document.hidden){
+        await load(true);
+        hideTip();
+      }
+      scheduleNext(); // วนซ้ำ — delay คำนวณใหม่จาก errorStreak ล่าสุด
+    }, delay);
   }
 
   function stopAuto(){
-    if (refreshTimer){ clearInterval(refreshTimer); refreshTimer=null; }
+    if (refreshTimer){ clearTimeout(refreshTimer); refreshTimer=null; }
   }
 
   document.addEventListener("visibilitychange", ()=>{
     if (!document.hidden){
-      nextRefreshAt = Date.now() + REFRESH_MS;
+      // กลับมาเปิด tab → โหลดทันที + reset schedule
       load(true);
       hideTip();
+      scheduleNext();
+    } else {
+      // ซ่อน tab → หยุด timer ประหยัด quota
+      stopAuto();
     }
   });
 
   (function init(){
     setActiveWeek(0);
-    startAuto();
+    scheduleNext();
   })();
 </script>
 </body>
