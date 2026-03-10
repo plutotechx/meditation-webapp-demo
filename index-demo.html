@@ -1,830 +1,693 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Update Daily Meditation</title>
   <style>
     :root {
-      --bg: #f4f7fb;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --border: #d9e2ef;
-      --primary: #1d4ed8;
-      --primary-soft: #e8f0ff;
-      --success: #15803d;
-      --success-soft: #e9f9ef;
-      --danger: #dc2626;
-      --danger-soft: #fff1f2;
-      --warning: #d97706;
-      --warning-soft: #fff7ed;
-      --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
-      --radius: 20px;
+      --bg:       #0b0f1a;
+      --surface:  #111827;
+      --s2:       #1a2235;
+      --border:   rgba(255,255,255,.10);
+      --border2:  rgba(255,255,255,.06);
+      --text:     #e8f0ff;
+      --muted:    rgba(232,240,255,.55);
+      --accent:   #5b9cf6;
+      --green:    #22c55e;
+      --red:      #f87171;
+      --yellow:   #fbbf24;
+      --r:        16px;
+      --sh:       0 4px 24px rgba(0,0,0,.45);
     }
-
-    * { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      margin: 0;
-      font-family: "Segoe UI", Tahoma, sans-serif;
+      font-family: system-ui,-apple-system,"Segoe UI","Noto Sans Thai",sans-serif;
+      background: var(--bg);
       color: var(--text);
-      background:
-        radial-gradient(circle at top left, #dbeafe 0%, transparent 28%),
-        radial-gradient(circle at top right, #e0f2fe 0%, transparent 22%),
-        var(--bg);
       min-height: 100vh;
-    }
-
-    .page {
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 28px 16px 48px;
-    }
-
-    .hero {
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
-      color: #fff;
-      border-radius: 28px;
-      padding: 28px 24px;
-      box-shadow: var(--shadow);
-      margin-bottom: 20px;
-    }
-
-    .hero h1 {
-      margin: 0 0 10px;
-      font-size: clamp(1.6rem, 3vw, 2.3rem);
-    }
-
-    .hero p {
-      margin: 0;
-      color: rgba(255,255,255,.85);
       line-height: 1.6;
     }
 
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.9fr);
-      gap: 20px;
+    /* ---- LAYOUT ---- */
+    .page { max-width: 720px; margin: 0 auto; padding: 32px 16px 72px; }
+
+    /* ---- HEADER ---- */
+    .header { text-align:center; margin-bottom: 28px; }
+    .hicon {
+      width:52px; height:52px; border-radius:14px;
+      background: linear-gradient(135deg,#1d4ed8,#0ea5e9);
+      display:inline-grid; place-items:center; margin-bottom:14px;
+      box-shadow: 0 8px 24px rgba(14,165,233,.25);
+    }
+    h1 { font-size:22px; font-weight:900; letter-spacing:-.3px; margin-bottom:4px; }
+    .hsub { color:var(--muted); font-size:14px; }
+    .week-badge {
+      display:inline-block; margin-top:10px;
+      padding:5px 16px; border-radius:999px;
+      background:var(--surface); border:1px solid var(--border);
+      font-size:13px; font-weight:800; color:var(--accent);
     }
 
-    @media (max-width: 860px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-    }
-
+    /* ---- CARD ---- */
     .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 22px;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--r); box-shadow:var(--sh); overflow:hidden;
     }
+    .card-body { padding:24px; }
 
-    .card h2 {
-      margin: 0 0 16px;
-      font-size: 1.2rem;
+    /* ---- STATUS STRIP ---- */
+    .strip {
+      display:flex; align-items:center; gap:12px;
+      padding:13px 20px;
+      background:var(--s2); border-bottom:1px solid var(--border2);
     }
+    .dots { display:flex; gap:7px; }
+    .dot {
+      width:10px; height:10px; border-radius:999px;
+      background:rgba(255,255,255,.12); transition:background .25s;
+    }
+    .dot.done   { background:var(--green); }
+    .dot.active { background:var(--accent); animation:pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+    .strip-lbl { font-size:13px; color:var(--muted); font-weight:600; }
+    .strip-cnt { margin-left:auto; font-size:13px; font-weight:900; }
 
-    .stack { display: grid; gap: 16px; }
+    /* ---- FORM ELEMENTS ---- */
+    .frow { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:500px){ .frow{grid-template-columns:1fr} }
+    .field + .field { margin-top:18px; }
 
     label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 8px;
+      display:block; font-size:12px; font-weight:800;
+      color:var(--muted); text-transform:uppercase; letter-spacing:.6px;
+      margin-bottom:8px;
     }
 
-    select,
-    input[type="date"] {
-      width: 100%;
-      min-height: 50px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px 14px;
-      font-size: 1rem;
-      color: var(--text);
-      background: #fff;
-      outline: none;
-      transition: border-color .2s ease, box-shadow .2s ease;
+    select {
+      width:100%; background:var(--s2); border:1px solid var(--border);
+      border-radius:10px; color:var(--text); padding:11px 38px 11px 14px;
+      font-size:15px; outline:none; appearance:none; -webkit-appearance:none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23607090' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:right 14px center;
+      cursor:pointer; transition:border-color .15s, box-shadow .15s;
     }
+    select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(91,156,246,.18); }
+    select option { background:#1a2235; color:#e8f0ff; }
+    select:disabled { opacity:.4; cursor:not-allowed; }
+    select option:disabled { color:#4b5563; }
 
-    select:focus,
-    input[type="date"]:focus {
-      border-color: #93c5fd;
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    /* ---- DIVIDER ---- */
+    .div { height:1px; background:var(--border2); margin:22px 0; }
+
+    /* ---- SECTION TITLE ---- */
+    .sec-title { font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; margin-bottom:12px; }
+
+    /* ---- SESSION BUTTONS ---- */
+    .sess-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    @media(max-width:480px){ .sess-grid{grid-template-columns:1fr} }
+
+    .sess-btn {
+      position:relative; background:var(--s2); border:1px solid var(--border);
+      border-radius:12px; padding:14px 12px; text-align:left; cursor:pointer;
+      color:var(--text); transition:all .18s; overflow:hidden;
     }
-
-    .status-panel {
-      border: 1px solid #fecaca;
-      background: linear-gradient(180deg, #fff5f5 0%, #fff 100%);
-      border-radius: 18px;
-      padding: 18px;
+    .sess-btn:hover:not(:disabled) {
+      border-color:rgba(91,156,246,.5); transform:translateY(-1px);
+      box-shadow:0 6px 18px rgba(0,0,0,.3);
     }
-
-    .status-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
+    .sess-btn.sel { border-color:var(--accent); box-shadow:0 0 0 3px rgba(91,156,246,.18); }
+    .sess-btn.done { border-color:rgba(34,197,94,.3); background:rgba(34,197,94,.06); cursor:not-allowed; opacity:.85; }
+    .sess-btn:disabled:not(.done) { cursor:not-allowed; opacity:.4; }
+    .sess-btn strong { display:block; font-size:13px; font-weight:900; margin-bottom:4px; }
+    .sess-btn .sub { font-size:12px; color:var(--muted); }
+    .badge {
+      display:inline-block; border-radius:999px; padding:2px 9px;
+      font-size:11px; font-weight:900; margin-top:7px;
     }
+    .badge.g { background:rgba(34,197,94,.14); color:var(--green); }
+    .badge.b { background:rgba(91,156,246,.13); color:var(--accent); }
 
-    .status-head h3 {
-      margin: 0;
-      font-size: 1.05rem;
-      color: #991b1b;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: .92rem;
-      font-weight: 700;
-      background: rgba(220, 38, 38, 0.08);
-      color: #991b1b;
-    }
-
-    .session-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .session-item {
-      border: 1px solid #fecaca;
-      border-radius: 14px;
-      padding: 14px;
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .session-item.done {
-      background: var(--success-soft);
-      border-color: #bbf7d0;
-    }
-
-    .session-item.pending {
-      background: var(--primary-soft);
-      border-color: #bfdbfe;
-    }
-
-    .session-main {
-      display: grid;
-      gap: 4px;
-    }
-
-    .session-title {
-      font-weight: 700;
-    }
-
-    .session-sub {
-      color: var(--muted);
-      font-size: .92rem;
-    }
-
-    .session-badge {
-      min-width: 92px;
-      text-align: center;
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: .9rem;
-    }
-
-    .session-badge.done {
-      color: var(--success);
-      background: rgba(21, 128, 61, 0.12);
-    }
-
-    .session-badge.pending {
-      color: var(--primary);
-      background: rgba(29, 78, 216, 0.12);
-    }
-
-    .helper {
-      color: var(--muted);
-      font-size: .95rem;
-      line-height: 1.55;
-    }
-
-    .picker-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    @media (max-width: 680px) {
-      .picker-grid { grid-template-columns: 1fr; }
-    }
-
-    .session-choice {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      background: #fff;
-      padding: 16px;
-      text-align: left;
-      cursor: pointer;
-      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-    }
-
-    .session-choice:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.10);
-      border-color: #93c5fd;
-    }
-
-    .session-choice strong {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 1rem;
-    }
-
-    .session-choice .choice-meta {
-      font-size: .9rem;
-      color: var(--muted);
-    }
-
-    .session-choice.done {
-      background: var(--success-soft);
-      border-color: #bbf7d0;
-      color: var(--success);
-      cursor: not-allowed;
-    }
-
-    .session-choice.pending {
-      background: var(--primary-soft);
-      border-color: #bfdbfe;
-      color: #1e3a8a;
-    }
-
-    .session-choice.active {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.14);
-      transform: translateY(-1px);
-    }
-
-    .actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .btn {
-      border: 0;
-      border-radius: 14px;
-      min-height: 52px;
-      padding: 0 20px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease;
-    }
-
-    .btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 22px rgba(29, 78, 216, 0.18);
-    }
-
-    .btn:disabled {
-      cursor: not-allowed;
-      opacity: .6;
-      box-shadow: none;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      color: #fff;
-    }
-
-    .btn-link {
-      background: #fff;
-      border: 1px solid var(--border);
-      color: var(--text);
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 180px;
-    }
-
+    /* ---- NOTICE ---- */
     .notice {
-      padding: 14px 16px;
-      border-radius: 14px;
-      font-size: .95rem;
-      display: none;
+      display:flex; align-items:center; gap:9px;
+      border-radius:10px; padding:11px 14px; margin-top:16px;
+      font-size:13px; font-weight:600; border:1px solid;
     }
-
-    .notice.show { display: block; }
-    .notice.info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .notice.warn { background: var(--warning-soft); color: #9a3412; border: 1px solid #fed7aa; }
-    .notice.error { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
-    .notice.success { background: #ecfdf3; color: #166534; border: 1px solid #bbf7d0; }
-
-    .summary-card {
-      display: grid;
-      gap: 12px;
+    .notice.info    { background:rgba(91,156,246,.10); border-color:rgba(91,156,246,.25); color:#93c5fd; }
+    .notice.success { background:rgba(34,197,94,.09);  border-color:rgba(34,197,94,.25);  color:#86efac; }
+    .notice.warn    { background:rgba(251,191,36,.09); border-color:rgba(251,191,36,.25); color:#fde68a; }
+    .notice.error   { background:rgba(248,113,113,.09);border-color:rgba(248,113,113,.25);color:#fca5a5; }
+    .n-icon { font-size:16px; flex-shrink:0; }
+    .spinner {
+      width:16px; height:16px; border-radius:999px;
+      border:2px solid rgba(255,255,255,.2); border-top-color:#fff;
+      animation:spin .7s linear infinite; flex-shrink:0;
     }
+    @keyframes spin { to{transform:rotate(360deg)} }
 
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+    /* ---- ACTIONS ---- */
+    .btn-row { margin-top:22px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .btn-submit {
+      flex:1; min-width:140px; border:none; border-radius:12px;
+      background:linear-gradient(135deg,#1d4ed8,#0ea5e9);
+      color:#fff; font-size:15px; font-weight:900; padding:14px 24px;
+      cursor:pointer; box-shadow:0 8px 24px rgba(14,165,233,.25);
+      transition:transform .15s, box-shadow .15s, opacity .15s;
     }
-
-    .summary-box {
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      text-align: center;
+    .btn-submit:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 12px 30px rgba(14,165,233,.35); }
+    .btn-submit:disabled { opacity:.4; cursor:not-allowed; box-shadow:none; }
+    .btn-link {
+      color:var(--muted); font-size:13px; font-weight:700;
+      text-decoration:none; transition:color .15s;
     }
+    .btn-link:hover { color:var(--text); }
 
-    .summary-box strong {
-      display: block;
-      font-size: 1.2rem;
-      margin-bottom: 4px;
+    .hint { font-size:12px; color:var(--muted); margin-top:12px; line-height:1.65; }
+    .hint b { color:rgba(232,240,255,.65); }
+
+    /* ---- SUCCESS OVERLAY ---- */
+    .overlay {
+      position:fixed; inset:0; z-index:9999;
+      display:grid; place-items:center;
+      background:rgba(0,0,0,.7);
+      backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);
+      opacity:0; pointer-events:none;
+      transition:opacity .22s;
     }
+    .overlay.open { opacity:1; pointer-events:all; }
 
-    .muted { color: var(--muted); }
-    .hidden { display: none !important; }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.48);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 1000;
+    .ov-card {
+      width:min(460px,88vw);
+      background:linear-gradient(160deg,#1a2a3a,#0f1724);
+      border:1px solid rgba(255,255,255,.18); border-radius:22px;
+      padding:44px 32px 36px; text-align:center;
+      box-shadow:0 28px 70px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.07);
+      transform:translateY(14px) scale(.95);
+      transition:transform .28s cubic-bezier(.34,1.56,.64,1), opacity .22s;
     }
+    .overlay.open .ov-card { transform:translateY(0) scale(1); }
 
-    .modal-backdrop.show { display: flex; }
-
-    .modal {
-      width: min(460px, 100%);
-      background: #fff;
-      border-radius: 24px;
-      padding: 24px;
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+    .ov-ring {
+      width:90px; height:90px; border-radius:999px; margin:0 auto 20px;
+      background:radial-gradient(circle,rgba(34,197,94,.2) 0%,transparent 70%);
+      display:grid; place-items:center; position:relative;
     }
-
-    .modal h3 {
-      margin: 0 0 10px;
-      font-size: 1.35rem;
+    .ov-ring::before {
+      content:""; position:absolute; inset:-7px; border-radius:999px;
+      border:2px solid rgba(34,197,94,.25);
+      animation:ringPulse 2.2s ease-in-out infinite;
     }
-
-    .modal p {
-      margin: 0 0 16px;
-      color: var(--muted);
-      line-height: 1.6;
+    @keyframes ringPulse {
+      0%,100%{transform:scale(1);opacity:.7}
+      50%{transform:scale(1.09);opacity:.3}
     }
-
-    .modal .summary-box {
-      background: #f0fdf4;
-      border-color: #bbf7d0;
+    .ov-icon {
+      width:72px; height:72px; border-radius:999px;
+      background:linear-gradient(135deg,#16a34a,#22c55e);
+      display:grid; place-items:center;
+      box-shadow:0 14px 36px rgba(34,197,94,.32);
+      animation:iconPop .3s cubic-bezier(.34,1.56,.64,1) both;
     }
+    @keyframes iconPop { from{transform:scale(.45);opacity:0} to{transform:scale(1);opacity:1} }
+
+    .ov-title { font-size:22px; font-weight:900; margin-bottom:6px; letter-spacing:-.2px; }
+    .ov-sub   { font-size:14px; color:var(--muted); line-height:1.6; }
+    .ov-btn {
+      margin-top:24px; display:inline-block;
+      background:rgba(255,255,255,.08); border:1px solid var(--border);
+      border-radius:10px; padding:9px 24px; font-size:13px; font-weight:700;
+      color:var(--muted); cursor:pointer; transition:background .15s,color .15s;
+    }
+    .ov-btn:hover { background:rgba(255,255,255,.14); color:var(--text); }
   </style>
 </head>
 <body>
-  <div class="page">
-    <section class="hero">
-      <h1>บันทึกข้อมูลการทำสมาธิ</h1>
-      <p>
-        เวอร์ชันนี้จะโหลดสถานะของวันนั้นให้ดูก่อนเลย ว่าทำรอบไหนแล้วบ้าง จะได้ไม่ต้องกดบันทึกไปลุ้นทีหลังให้ระบบเหนื่อยสองต่อ
-      </p>
-    </section>
 
-    <div class="layout">
-      <section class="card stack">
-        <h2>กรอกข้อมูลประจำวัน</h2>
+<div class="page">
 
+  <!-- Header -->
+  <div class="header">
+    <div class="hicon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="#7dd3fc" stroke-width="1.5"/>
+        <path d="M12 7v5l3 2" stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1>Update Daily Meditation</h1>
+    <p class="hsub">บันทึกข้อมูลการทำสมาธิประจำวัน</p>
+    <span class="week-badge" id="weekBadge">...</span>
+  </div>
+
+  <!-- Main Card -->
+  <div class="card">
+
+    <!-- Status strip -->
+    <div class="strip" id="strip" style="display:none">
+      <div class="dots">
+        <div class="dot" id="d1"></div>
+        <div class="dot" id="d2"></div>
+        <div class="dot" id="d3"></div>
+      </div>
+      <span class="strip-lbl" id="stripLbl">ยังไม่ได้ทำ</span>
+      <span class="strip-cnt" id="stripCnt">0 / 3</span>
+    </div>
+
+    <div class="card-body">
+
+      <!-- Name + Date -->
+      <div class="frow">
         <div>
-          <label for="nameSelect">ชื่อ - ชื่อเล่น</label>
-          <select id="nameSelect">
+          <label for="selName">ชื่อ – ชื่อเล่น</label>
+          <select id="selName">
             <option value="">กำลังโหลดรายชื่อ...</option>
           </select>
         </div>
-
         <div>
-          <label for="logDateInput">วันที่บันทึก</label>
-          <input id="logDateInput" type="date" />
-        </div>
-
-        <div id="topNotice" class="notice info show">เลือกรายชื่อและวันที่ก่อน ระบบจะเช็กให้เลยว่าวันนี้ทำรอบไหนไปแล้ว</div>
-
-        <div class="status-panel">
-          <div class="status-head">
-            <h3>สถานะของวันนี้</h3>
-            <div id="statusPill" class="status-pill">0 / 3 รอบ</div>
-          </div>
-          <div id="statusList" class="session-list"></div>
-        </div>
-
-        <div>
-          <label>ช่วงเวลา การทำสมาธิ</label>
-          <div id="sessionChoices" class="picker-grid"></div>
-          <input id="sessionInput" type="hidden" />
-        </div>
-
-        <div>
-          <label for="durationSelect">ระยะเวลาในการทำสมาธิ (แต่ละครั้ง)</label>
-          <select id="durationSelect">
-            <option value="">— เลือกระยะเวลา —</option>
-            <option value="3-5 นาที">3-5 นาที</option>
-            <option value="10 นาที">10 นาที</option>
+          <label for="selDate">วันที่บันทึก</label>
+          <select id="selDate">
+            <option value="">— เลือกวันที่ —</option>
           </select>
         </div>
+      </div>
 
-        <div class="actions">
-          <button id="submitBtn" class="btn btn-primary" type="button">บันทึกข้อมูล</button>
-          <a class="btn btn-link" href="status.html">ตรวจสอบสถานะการทำสมาธิ</a>
-        </div>
+      <!-- Duration -->
+      <div class="field" style="margin-top:18px">
+        <label for="selDur">ระยะเวลาต่อรอบ</label>
+        <select id="selDur">
+          <option value="">— เลือกระยะเวลา —</option>
+          <option value="3-5 นาที">3-5 นาที</option>
+          <option value="10 นาที">10 นาที</option>
+        </select>
+      </div>
 
-        <div class="helper">
-          หมายเหตุ: รอบที่ทำแล้วจะขึ้นสีเขียวและกดไม่ได้ ส่วนรอบที่ยังไม่ได้ทำจะขึ้นสีฟ้าและเลือกได้ทันที
-        </div>
-      </section>
+      <div class="div"></div>
 
-      <aside class="card summary-card">
-        <h2>สรุปเร็ว</h2>
-        <div class="summary-grid">
-          <div class="summary-box">
-            <strong id="doneCountBox">0</strong>
-            <span class="muted">ทำแล้ว</span>
-          </div>
-          <div class="summary-box">
-            <strong id="remainCountBox">3</strong>
-            <span class="muted">เหลือ</span>
-          </div>
-          <div class="summary-box">
-            <strong id="selectedBox">-</strong>
-            <span class="muted">รอบที่เลือก</span>
-          </div>
-        </div>
+      <!-- Session picker -->
+      <div class="sec-title">เลือกช่วงเวลาที่ต้องการบันทึก</div>
+      <div class="sess-grid" id="sessGrid"></div>
+      <input type="hidden" id="hidSess" />
 
-        <div id="sideNotice" class="notice info show">ยังไม่ได้เลือกรายชื่อ</div>
+      <!-- Notice -->
+      <div class="notice info" id="notice">
+        <span class="n-icon">💡</span>
+        <span id="noticeMsg">เลือกรายชื่อและวันที่ ระบบจะเช็กสถานะให้อัตโนมัติ</span>
+      </div>
 
-        <div class="helper">
-          การเช็กสถานะจะทำตอนเลือกชื่อหรือวันที่ เพื่อให้ตอนกดบันทึกเหลือแค่งานหลักจริง ๆ คือ “บันทึกข้อมูล” ไม่ต้องให้ระบบวิ่งย้อนมานับทั้งกองอีกที
-        </div>
-      </aside>
+      <!-- Submit -->
+      <div class="btn-row">
+        <button class="btn-submit" id="btnSubmit" disabled type="button">บันทึกข้อมูล</button>
+        <a class="btn-link" href="/status.html">ตรวจสอบสถานะ →</a>
+      </div>
+
+      <p class="hint">
+        <b>กัน backdating:</b> วันที่ผ่านมาและอนาคตถูกล็อกไว้ บันทึกได้เฉพาะ<b>วันนี้</b>เท่านั้น
+        · รอบ <b style="color:var(--green)">สีเขียว</b> = ทำแล้ว (ล็อก) · รอบ <b style="color:var(--accent)">สีฟ้า</b> = ยังไม่ได้ทำ
+      </p>
+
     </div>
   </div>
 
-  <div id="successModal" class="modal-backdrop" aria-hidden="true">
-    <div class="modal">
-      <h3>บันทึกข้อมูลสำเร็จ</h3>
-      <p id="successText">ระบบบันทึกข้อมูลเรียบร้อยแล้ว</p>
-      <div class="summary-box">
-        <strong id="successDoneCount">0 / 3</strong>
-        <span class="muted">สถานะล่าสุดของวันนี้</span>
-      </div>
-      <div class="actions" style="margin-top:16px; justify-content:flex-end;">
-        <button id="closeModalBtn" class="btn btn-primary" type="button">ปิด</button>
+</div>
+
+<!-- Success Overlay -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="ov-card">
+    <div class="ov-ring">
+      <div class="ov-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+          <path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
     </div>
+    <div class="ov-title" id="ovTitle">บันทึกสำเร็จ!</div>
+    <div class="ov-sub"   id="ovSub">ข้อมูลถูกบันทึกเรียบร้อยแล้ว</div>
+    <div class="ov-btn"   id="ovBtn" tabindex="0" role="button">ตกลง</div>
   </div>
+</div>
 
-  <script>
-    const API = {
-      names: "/api/names",
-      checkStatus: "/api/checkStatus",
-      submit: "/api/submit"
-    };
+<script>
+/* ============================================================
+   CONFIG
+============================================================ */
+const API = {
+  names:       "/api/names",
+  checkStatus: "/api/checkStatus",
+  submit:      "/api/submit"
+};
 
-    const SESSION_META = {
-      s1: { label: "ครั้งที่ 1", detail: "ตื่นนอน - ช่วงเช้า" },
-      s2: { label: "ครั้งที่ 2", detail: "ระหว่างวัน" },
-      s3: { label: "ครั้งที่ 3", detail: "ก่อนนอน - ช่วงค่ำ" }
-    };
+const SESSIONS = [
+  { label:"ครั้งที่ 1", sub:"ตื่นนอน – ช่วงเช้า"  },
+  { label:"ครั้งที่ 2", sub:"ระหว่างวัน"           },
+  { label:"ครั้งที่ 3", sub:"ก่อนนอน – ช่วงค่ำ"   }
+];
 
-    const state = {
-      names: [],
-      status: emptyStatus(),
-      selectedSessionKey: "",
-      loadingStatus: false,
-      pendingStatusRequestId: 0
-    };
+const DOW_TH = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัส","ศุกร์","เสาร์"];
 
-    const els = {
-      nameSelect: document.getElementById("nameSelect"),
-      logDateInput: document.getElementById("logDateInput"),
-      durationSelect: document.getElementById("durationSelect"),
-      statusList: document.getElementById("statusList"),
-      statusPill: document.getElementById("statusPill"),
-      sessionChoices: document.getElementById("sessionChoices"),
-      sessionInput: document.getElementById("sessionInput"),
-      submitBtn: document.getElementById("submitBtn"),
-      topNotice: document.getElementById("topNotice"),
-      sideNotice: document.getElementById("sideNotice"),
-      doneCountBox: document.getElementById("doneCountBox"),
-      remainCountBox: document.getElementById("remainCountBox"),
-      selectedBox: document.getElementById("selectedBox"),
-      successModal: document.getElementById("successModal"),
-      successText: document.getElementById("successText"),
-      successDoneCount: document.getElementById("successDoneCount"),
-      closeModalBtn: document.getElementById("closeModalBtn")
-    };
+/* ============================================================
+   STATE
+============================================================ */
+let status        = null;   // last checkStatus response
+let selectedSess  = "";     // "ครั้งที่ 1" / "ครั้งที่ 2" / "ครั้งที่ 3"
+let loading       = false;
+let pendingId     = 0;
 
-    function emptyStatus() {
-      return {
-        ok: true,
-        doneCount: 0,
-        sessions: {
-          s1: { done: false, mark: "—", time: "" },
-          s2: { done: false, mark: "—", time: "" },
-          s3: { done: false, mark: "—", time: "" }
-        }
-      };
+/* ============================================================
+   HELPERS
+============================================================ */
+const $ = id => document.getElementById(id);
+
+function pad(n){ return String(n).padStart(2,"0"); }
+
+function toISO(d){
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function thaiShort(d){
+  return d.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});
+}
+
+function mondayOf(d){
+  const x = new Date(d); x.setHours(0,0,0,0);
+  const day = x.getDay();
+  x.setDate(x.getDate() - (day===0 ? 6 : day-1));
+  return x;
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+async function fetchJson(url, opts={}){
+  const res  = await fetch(url, opts);
+  const data = await res.json().catch(()=>({}));
+  if (!res.ok || data.ok===false){
+    const e = new Error(data.error || `http_${res.status}`);
+    e.payload = data; throw e;
+  }
+  return data;
+}
+
+/* --- notice --- */
+function setNotice(type, msg, spin=false){
+  const icons = {info:"💡", success:"✅", warn:"⚠️", error:"❌"};
+  const el = $("notice");
+  el.className = `notice ${type}`;
+  $("noticeMsg").textContent = msg;
+  const ico = el.querySelector(".n-icon");
+  ico.innerHTML = spin ? '<div class="spinner"></div>' : (icons[type]||"💡");
+}
+
+/* ============================================================
+   WEEK BADGE
+============================================================ */
+function renderWeekBadge(){
+  const now = new Date();
+  const mon = mondayOf(now);
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  $("weekBadge").textContent =
+    `จ ${thaiShort(mon)} – อา ${thaiShort(sun)}`;
+}
+
+/* ============================================================
+   DATE DROPDOWN  — จ–อา สัปดาห์นี้, กัน backdating & future
+============================================================ */
+function buildDateDropdown(){
+  const now      = new Date();
+  const todayISO = toISO(now);
+  const mon      = mondayOf(now);
+  const sel      = $("selDate");
+  sel.innerHTML  = "";
+
+  // placeholder
+  const ph = new Option("— เลือกวันที่ —", ""); ph.disabled=true; ph.selected=true;
+  sel.add(ph);
+
+  for (let i=0; i<7; i++){
+    const d   = new Date(mon); d.setDate(mon.getDate()+i);
+    const iso = toISO(d);
+    const dow = DOW_TH[d.getDay()];
+    const lbl = `${dow}  ${thaiShort(d)}`;
+    const opt = new Option("", iso);
+    opt.dataset.dow = dow;
+
+    if (iso < todayISO){
+      opt.textContent = `${lbl}  (ผ่านมาแล้ว)`;
+      opt.disabled    = true;
+    } else if (iso > todayISO){
+      opt.textContent = `${lbl}  (ยังมาไม่ถึง)`;
+      opt.disabled    = true;
+    } else {
+      opt.textContent = `${lbl}  ← วันนี้`;
+      opt.selected    = true;
     }
+    sel.add(opt);
+  }
+}
 
-    function todayISO() {
-      const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${y}-${m}-${day}`;
-    }
+/* ============================================================
+   STATUS STRIP
+============================================================ */
+function renderStrip(){
+  if (!status){ $("strip").style.display="none"; return; }
+  $("strip").style.display="flex";
+  const done = status.doneCount || 0;
+  const sess = status.sessions  || {};
+  ["s1","s2","s3"].forEach((k,i)=>{
+    const dot = $(`d${i+1}`);
+    dot.className = "dot" +
+      (sess[k]?.done ? " done" : (i===done && done<3 ? " active" : ""));
+  });
+  $("stripLbl").textContent =
+    done>=3 ? "ครบทั้ง 3 รอบแล้ว 🎉" :
+    done===0 ? "ยังไม่ได้ทำ" : `ทำแล้ว ${done} รอบ`;
+  $("stripCnt").textContent = `${done} / 3`;
+}
 
-    function setNotice(el, type, text) {
-      el.className = `notice ${type} show`;
-      el.textContent = text;
-    }
+/* ============================================================
+   SESSION GRID
+============================================================ */
+function renderSessGrid(){
+  const grid = $("sessGrid");
+  grid.innerHTML = "";
 
-    function clearNotice(el) {
-      el.className = "notice";
-      el.textContent = "";
-    }
+  // build done map: s1→label, s2→label, s3→label
+  const doneMap = {};
+  if (status?.sessions){
+    Object.entries(status.sessions).forEach(([k,v])=>{
+      const i = parseInt(k.replace("s",""),10)-1;
+      if (SESSIONS[i]) doneMap[SESSIONS[i].label] = v;
+    });
+  }
 
-    function escapeHtml(text) {
-      return String(text)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
+  // auto-pick first available
+  if (!selectedSess || doneMap[selectedSess]?.done){
+    selectedSess = SESSIONS.find(s=>!doneMap[s.label]?.done)?.label || "";
+  }
+  $("hidSess").value = selectedSess;
 
-    async function fetchJson(url, options = {}) {
-      const res = await fetch(url, options);
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.ok === false) {
-        const err = new Error(data.error || `http_${res.status}`);
-        err.payload = data;
-        throw err;
-      }
-      return data;
-    }
+  SESSIONS.forEach(sess=>{
+    const info   = doneMap[sess.label] || {done:false};
+    const isDone = !!info.done;
+    const isSel  = !isDone && selectedSess===sess.label;
 
-    async function loadNames() {
-      try {
-        const data = await fetchJson(API.names);
-        state.names = Array.isArray(data.names) ? data.names : [];
-        renderNames();
-        setNotice(els.sideNotice, "info", "เลือกรายชื่อแล้วระบบจะเช็กสถานะของวันนั้นให้ทันที");
-      } catch (err) {
-        console.error(err);
-        state.names = [];
-        els.nameSelect.innerHTML = `<option value="">โหลดรายชื่อไม่สำเร็จ</option>`;
-        setNotice(els.topNotice, "error", "โหลดรายชื่อไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง");
-      }
-    }
+    const btn = document.createElement("button");
+    btn.type      = "button";
+    btn.className = "sess-btn" + (isDone?" done":"") + (isSel?" sel":"");
+    if (isDone) btn.disabled = true;
 
-    function renderNames() {
-      const options = [`<option value="">— เลือกชื่อ —</option>`]
-        .concat(state.names.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`));
-      els.nameSelect.innerHTML = options.join("");
-    }
+    btn.innerHTML = `
+      <strong>${esc(sess.label)}</strong>
+      <div class="sub">${esc(sess.sub)}</div>
+      <div>${
+        isDone
+          ? `<span class="badge g">✓ ${esc(info.time||"--:--")} น.</span>`
+          : `<span class="badge b">เลือก</span>`
+      }</div>`;
 
-    function renderStatus() {
-      const status = state.status || emptyStatus();
-      els.statusPill.textContent = `${status.doneCount || 0} / 3 รอบ`;
-      els.doneCountBox.textContent = String(status.doneCount || 0);
-      els.remainCountBox.textContent = String(3 - (status.doneCount || 0));
-      els.selectedBox.textContent = state.selectedSessionKey ? SESSION_META[state.selectedSessionKey].label : "-";
-
-      els.statusList.innerHTML = ["s1", "s2", "s3"].map(key => {
-        const item = status.sessions[key];
-        const done = !!item.done;
-        const meta = SESSION_META[key];
-        const detail = done
-          ? `ทำแล้วเวลา ${item.time || "--:--"} น.`
-          : `ยังไม่ได้ทำ${meta.detail ? ` · ${meta.detail}` : ""}`;
-        return `
-          <div class="session-item ${done ? "done" : "pending"}">
-            <div class="session-main">
-              <div class="session-title">${meta.label}</div>
-              <div class="session-sub">${detail}</div>
-            </div>
-            <div class="session-badge ${done ? "done" : "pending"}">${done ? `✅ ${item.time || "--:--"}` : "⏳ รอทำ"}</div>
-          </div>
-        `;
-      }).join("");
-
-      renderSessionChoices();
-      syncSubmitState();
-    }
-
-    function renderSessionChoices() {
-      const status = state.status || emptyStatus();
-      const firstAvailable = ["s1","s2","s3"].find(key => !status.sessions[key].done) || "";
-      if (!state.selectedSessionKey || status.sessions[state.selectedSessionKey]?.done) {
-        state.selectedSessionKey = firstAvailable;
-      }
-      els.sessionInput.value = state.selectedSessionKey ? SESSION_META[state.selectedSessionKey].label : "";
-
-      els.sessionChoices.innerHTML = ["s1","s2","s3"].map(key => {
-        const item = status.sessions[key];
-        const meta = SESSION_META[key];
-        const done = !!item.done;
-        const active = !done && state.selectedSessionKey === key;
-        const secondary = done
-          ? `ทำแล้วเวลา ${item.time || "--:--"} น.`
-          : `ยังไม่ได้ทำ · ${meta.detail}`;
-        return `
-          <button
-            type="button"
-            class="session-choice ${done ? "done" : "pending"} ${active ? "active" : ""}"
-            data-session-key="${key}"
-            ${done ? "disabled" : ""}
-          >
-            <strong>${meta.label} ${done ? "✅" : "⏳"}</strong>
-            <div class="choice-meta">${secondary}</div>
-          </button>
-        `;
-      }).join("");
-
-      els.sessionChoices.querySelectorAll(".session-choice:not(:disabled)").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.selectedSessionKey = btn.dataset.sessionKey || "";
-          els.sessionInput.value = state.selectedSessionKey ? SESSION_META[state.selectedSessionKey].label : "";
-          renderSessionChoices();
-          els.selectedBox.textContent = state.selectedSessionKey ? SESSION_META[state.selectedSessionKey].label : "-";
-        });
+    if (!isDone){
+      btn.addEventListener("click", ()=>{
+        selectedSess = sess.label;
+        $("hidSess").value = sess.label;
+        renderSessGrid();
+        syncBtn();
       });
     }
+    grid.appendChild(btn);
+  });
+}
 
-    function syncSubmitState() {
-      const hasName = !!els.nameSelect.value;
-      const hasDate = !!els.logDateInput.value;
-      const hasDuration = !!els.durationSelect.value;
-      const canPick = !!state.selectedSessionKey;
-      const allDone = (state.status?.doneCount || 0) >= 3;
-      els.submitBtn.disabled = !(hasName && hasDate && hasDuration && canPick && !state.loadingStatus && !allDone);
+/* ============================================================
+   SYNC SUBMIT BUTTON
+============================================================ */
+function syncBtn(){
+  const ok =
+    !!$("selName").value &&
+    !!$("selDate").value &&
+    !!$("selDur").value  &&
+    !!selectedSess       &&
+    !loading             &&
+    (status?.doneCount||0) < 3;
+  $("btnSubmit").disabled = !ok;
+}
+
+/* ============================================================
+   LOAD NAMES
+============================================================ */
+async function loadNames(){
+  try {
+    const data  = await fetchJson(API.names);
+    const names = Array.isArray(data.names) ? data.names : [];
+    $("selName").innerHTML =
+      `<option value="">— เลือกชื่อ —</option>` +
+      names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");
+    if (!names.length)
+      setNotice("warn","โหลดรายชื่อสำเร็จ แต่ไม่มีข้อมูล — กรุณาเพิ่มรายชื่อใน GAS Sheet");
+  } catch(err){
+    console.error("loadNames:", err);
+    $("selName").innerHTML = `<option value="">โหลดรายชื่อไม่สำเร็จ</option>`;
+    setNotice("error","โหลดรายชื่อไม่สำเร็จ กรุณารีเฟรชหน้า");
+  }
+}
+
+/* ============================================================
+   LOAD STATUS
+============================================================ */
+async function loadStatus(){
+  const name    = $("selName").value.trim();
+  const logDate = $("selDate").value.trim();
+  if (!name || !logDate){
+    status       = null; selectedSess = "";
+    renderSessGrid(); renderStrip();
+    setNotice("info","เลือกรายชื่อและวันที่ก่อน ระบบจะเช็กสถานะให้");
+    syncBtn(); return;
+  }
+
+  const rid = ++pendingId;
+  loading = true; syncBtn();
+  setNotice("info","กำลังเช็กสถานะ...", true);
+
+  try {
+    const qs   = new URLSearchParams({name, logDate});
+    const data = await fetchJson(`${API.checkStatus}?${qs}`);
+    if (rid !== pendingId) return;
+    status = data;
+    const done = data.doneCount||0;
+    setNotice(
+      done>=3 ? "success" : "info",
+      done>=3
+        ? "ทำครบทั้ง 3 รอบแล้ว ไม่ต้องบันทึกซ้ำ 🎉"
+        : `ทำแล้ว ${done} รอบ เหลือ ${3-done} รอบ — เลือกรอบที่ต้องการ`
+    );
+  } catch(err){
+    if (rid!==pendingId) return;
+    console.error("loadStatus:", err);
+    status = null; selectedSess = "";
+    setNotice("error","เช็กสถานะไม่สำเร็จ กรุณาลองใหม่");
+  } finally {
+    if (rid===pendingId){
+      loading = false;
+      renderSessGrid(); renderStrip(); syncBtn();
     }
+  }
+}
 
-    async function loadStatus() {
-      const name = els.nameSelect.value.trim();
-      const logDate = els.logDateInput.value.trim();
+/* ============================================================
+   SUBMIT
+============================================================ */
+async function submitForm(){
+  const name    = $("selName").value.trim();
+  const logDate = $("selDate").value.trim();
+  const session = $("hidSess").value.trim();
+  const duration= $("selDur").value.trim();
+  const weekday = $("selDate").selectedOptions[0]?.dataset?.dow || "";
 
-      if (!name || !logDate) {
-        state.status = emptyStatus();
-        state.selectedSessionKey = "";
-        renderStatus();
-        setNotice(els.topNotice, "info", "เลือกรายชื่อและวันที่ก่อน ระบบถึงจะเช็กสถานะให้ได้");
-        setNotice(els.sideNotice, "info", !name ? "ยังไม่ได้เลือกรายชื่อ" : "ยังไม่ได้เลือกวันที่");
-        return;
-      }
+  if (!name||!logDate||!session||!duration){
+    setNotice("warn","กรุณาเลือกข้อมูลให้ครบก่อนกดบันทึก"); return;
+  }
 
-      const requestId = ++state.pendingStatusRequestId;
-      state.loadingStatus = true;
-      syncSubmitState();
-      setNotice(els.topNotice, "info", "กำลังเช็กสถานะของวันนั้น...");
+  const body = { name, logDate, session, duration, weekday,
+    clientNow:   new Date().toISOString(),
+    tzOffsetMin: new Date().getTimezoneOffset() };
 
-      try {
-        const qs = new URLSearchParams({ name, logDate });
-        const data = await fetchJson(`${API.checkStatus}?${qs.toString()}`);
-        if (requestId !== state.pendingStatusRequestId) return;
-        state.status = data;
-        setNotice(
-          els.topNotice,
-          data.doneCount >= 3 ? "success" : "info",
-          data.doneCount >= 3
-            ? "วันนี้ทำครบทั้ง 3 รอบแล้ว รอบที่ทำแล้วจะถูกล็อกไว้ให้เลย"
-            : `วันนี้ทำแล้ว ${data.doneCount || 0} รอบ ยังเหลือ ${3 - (data.doneCount || 0)} รอบ`
-        );
-        setNotice(
-          els.sideNotice,
-          data.doneCount >= 3 ? "success" : "info",
-          data.doneCount >= 3
-            ? "ครบแล้ว ไม่ต้องเลือกซ้ำให้ระบบงงเล่น"
-            : "เลือกรอบที่ยังไม่ได้ทำได้เลยจากการ์ดสีน้ำเงิน"
-        );
-      } catch (err) {
-        console.error(err);
-        if (requestId !== state.pendingStatusRequestId) return;
-        state.status = emptyStatus();
-        state.selectedSessionKey = "";
-        setNotice(els.topNotice, "error", "เช็กสถานะไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
-        setNotice(els.sideNotice, "error", "ระบบยังดึงสถานะไม่ขึ้น เลยยังไม่ควรบันทึกต่อทันที");
-      } finally {
-        if (requestId === state.pendingStatusRequestId) {
-          state.loadingStatus = false;
-          renderStatus();
-          syncSubmitState();
-        }
-      }
+  $("btnSubmit").disabled = true;
+  setNotice("info","กำลังบันทึก...", true);
+
+  try {
+    const data = await fetchJson(API.submit, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(body)
+    });
+
+    if (data.status) status = data.status;
+    selectedSess = SESSIONS.find(s=>{
+      const k = `s${SESSIONS.findIndex(x=>x.label===s.label)+1}`;
+      return !status?.sessions?.[k]?.done;
+    })?.label || "";
+
+    renderSessGrid(); renderStrip();
+    setNotice("success",`บันทึก ${session} เรียบร้อย`);
+    showOverlay(`${name}`, `บันทึก${session}เรียบร้อยแล้ว ✨`);
+
+  } catch(err){
+    console.error("submit:", err);
+    const code = err.payload?.error || err.message || "";
+    if (code==="session_already_done"){
+      if (err.payload?.status) status = err.payload.status;
+      renderSessGrid(); renderStrip();
+      setNotice("warn","รอบนี้บันทึกไปแล้ว กรุณาเลือกรอบสีฟ้า");
+    } else if (code==="already_completed_all_sessions"){
+      if (err.payload?.status) status = err.payload.status;
+      renderSessGrid(); renderStrip();
+      setNotice("success","ทำครบทั้ง 3 รอบแล้ว ไม่ต้องบันทึกซ้ำ");
+    } else if (code==="logDate_mismatch_server_local_day"){
+      setNotice("error","วันที่ไม่ตรงกับวันปัจจุบัน ไม่สามารถบันทึกย้อนหลังได้");
+    } else {
+      setNotice("error","บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
     }
+  } finally {
+    syncBtn();
+  }
+}
 
-    async function submitForm() {
-      const name = els.nameSelect.value.trim();
-      const logDate = els.logDateInput.value.trim();
-      const session = els.sessionInput.value.trim();
-      const duration = els.durationSelect.value.trim();
+/* ============================================================
+   OVERLAY
+============================================================ */
+let ovTimer = null;
+function showOverlay(title, sub){
+  $("ovTitle").textContent = title;
+  $("ovSub").textContent   = sub;
+  const ov = $("overlay");
+  ov.classList.add("open"); ov.setAttribute("aria-hidden","false");
+  clearTimeout(ovTimer);
+  ovTimer = setTimeout(hideOverlay, 3200);
+}
+function hideOverlay(){
+  const ov = $("overlay");
+  ov.classList.remove("open"); ov.setAttribute("aria-hidden","true");
+}
+$("ovBtn").addEventListener("click", hideOverlay);
+$("ovBtn").addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" ") hideOverlay(); });
+$("overlay").addEventListener("click", e=>{ if(e.target===$("overlay")) hideOverlay(); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") hideOverlay(); });
 
-      if (!name || !logDate || !session || !duration) {
-        setNotice(els.topNotice, "warn", "กรุณาเลือกรายชื่อ วันที่ รอบเวลา และระยะเวลาให้ครบก่อน");
-        return;
-      }
+/* ============================================================
+   INIT
+============================================================ */
+(async function init(){
+  renderWeekBadge();
+  buildDateDropdown();
+  renderSessGrid();
+  syncBtn();
+  await loadNames();
+  if ($("selName").value) loadStatus();
 
-      const payload = {
-        name,
-        logDate,
-        session,
-        duration,
-        clientNow: new Date().toISOString(),
-        tzOffsetMin: new Date().getTimezoneOffset()
-      };
-
-      els.submitBtn.disabled = true;
-      setNotice(els.topNotice, "info", "กำลังบันทึกข้อมูล...");
-
-      try {
-        const data = await fetchJson(API.submit, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (data.status) {
-          state.status = data.status;
-          state.selectedSessionKey = ["s1","s2","s3"].find(key => !state.status.sessions[key].done) || "";
-          renderStatus();
-        }
-
-        setNotice(els.topNotice, "success", "บันทึกข้อมูลสำเร็จเรียบร้อย");
-        setNotice(els.sideNotice, "success", `อัปเดตแล้ว ตอนนี้ทำครบ ${state.status.doneCount || 0} / 3 รอบ`);
-        openSuccessModal(name, session, state.status.doneCount || 0);
-      } catch (err) {
-        console.error(err);
-        const code = err.payload?.error || err.message || "submit_failed";
-        if (code === "session_already_done") {
-          state.status = err.payload.status || state.status;
-          renderStatus();
-          setNotice(els.topNotice, "warn", "รอบนี้ถูกบันทึกไปแล้ว เลือกรอบที่ยังเป็นสีน้ำเงินแทนได้เลย");
-        } else if (code === "already_completed_all_sessions") {
-          state.status = err.payload.status || state.status;
-          renderStatus();
-          setNotice(els.topNotice, "warn", "วันนี้ทำครบทั้ง 3 รอบแล้ว ไม่ต้องกดซ้ำแล้วครับ");
-        } else {
-          setNotice(els.topNotice, "error", "บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
-        }
-      } finally {
-        syncSubmitState();
-      }
-    }
-
-    function openSuccessModal(name, session, doneCount) {
-      els.successText.textContent = `${name} บันทึก ${session} เรียบร้อยแล้ว`;
-      els.successDoneCount.textContent = `${doneCount} / 3`;
-      els.successModal.classList.add("show");
-      els.successModal.setAttribute("aria-hidden", "false");
-    }
-
-    function closeSuccessModal() {
-      els.successModal.classList.remove("show");
-      els.successModal.setAttribute("aria-hidden", "true");
-    }
-
-    function bindEvents() {
-      els.nameSelect.addEventListener("change", loadStatus);
-      els.logDateInput.addEventListener("change", loadStatus);
-      els.durationSelect.addEventListener("change", syncSubmitState);
-      els.submitBtn.addEventListener("click", submitForm);
-      els.closeModalBtn.addEventListener("click", closeSuccessModal);
-      els.successModal.addEventListener("click", (e) => {
-        if (e.target === els.successModal) closeSuccessModal();
-      });
-    }
-
-    async function init() {
-      els.logDateInput.value = todayISO();
-      bindEvents();
-      renderStatus();
-      syncSubmitState();
-      await loadNames();
-    }
-
-    init();
-  </script>
+  $("selName").addEventListener("change", loadStatus);
+  $("selDate").addEventListener("change", loadStatus);
+  $("selDur").addEventListener("change",  syncBtn);
+  $("btnSubmit").addEventListener("click", submitForm);
+})();
+</script>
 </body>
 </html>
