@@ -1,20 +1,67 @@
 import { json } from "./_util.js";
 
-export async function onRequestGet({ env }) {
+const CACHE_TTL_SECONDS = 600; // 10 นาที
+const FETCH_TIMEOUT_MS = 7000; // 7 วินาที
+
+export async function onRequestGet(context) {
+  const { env, request } = context;
+
   try {
     if (!env.GAS_URL || !env.SECRET) {
       return json({ ok: false, error: "missing_env" }, 500);
     }
 
+    // ทำ cache key ของ endpoint นี้
+    const cache = caches.default;
+    const cacheKey = new Request(new URL(request.url).toString(), {
+      method: "GET",
+    });
+
+    // 1) ลองอ่านจาก cache ก่อน
+    const cached = await cache.match(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // 2) เรียก GAS แบบมี timeout
     const url = new URL(env.GAS_URL);
     url.searchParams.set("action", "names");
     url.searchParams.set("secret", env.SECRET);
 
-    const res = await fetch(url.toString(), { method: "GET" });
-    const out = await res.json().catch(() => ({}));
-    return json(out, res.ok ? 200 : 500);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
+    let res;
+    let out;
+
+    try {
+      res = await fetch(url.toString(), {
+        method: "GET",
+        signal: controller.signal,
+      });
+      out = await res.json().catch(() => ({}));
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (!res.ok || out.ok === false) {
+      return json(
+        { ok: false, error: out.error || `upstream_${res.status}` },
+        500
+      );
+    }
+
+    // 3) สร้าง response พร้อม cache header
+    const response = json(out, 200, {
+      "Cache-Control": `public, max-age=${CACHE_TTL_SECONDS}, s-maxage=${CACHE_TTL_SECONDS}`,
+    });
+
+    // 4) เก็บเข้า Cloudflare cache
+    context.waitUntil(cache.put(cacheKey, response.clone()));
+
+    return response;
   } catch (e) {
-    return json({ ok: false, error: String(e) }, 500);
+    const msg = e && e.name === "AbortError" ? "gas_timeout" : String(e);
+    return json({ ok: false, error: msg }, 500);
   }
 }
