@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Status - Daily Meditation</title>
-  <!-- UpdatedAt: 2026-02-12 00:00 (+07:00) | Change: remove previous Sunday option -->
+  <!-- UpdatedAt: 2026-03-10 23:30 (+07:00) | Change: hardcode names, remove /api/names -->
 
   <style>
     :root{
@@ -85,7 +85,6 @@
       text-align:center;
     }
 
-    /* desktop corner updated */
     .updatedCorner{
       position:absolute;
       top:14px;
@@ -163,14 +162,12 @@
       background:rgba(0,0,0,.18);
       padding:14px 12px;
       min-height:122px;
-
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
       gap:12px;
       text-align:center;
-
       box-shadow:0 14px 40px rgba(0,0,0,.25);
       position:relative;
       overflow:hidden;
@@ -183,145 +180,48 @@
       background:linear-gradient(180deg, var(--tint-bad), rgba(0,0,0,.16));
       border-color:var(--tint-border-bad);
     }
-    .box.sum{
-      background:rgba(0,0,0,.18);
-      border-color:rgba(255,255,255,.12);
-    }
+    .box.sum{ background:rgba(0,0,0,.18); border-color:rgba(255,255,255,.12); }
     .box.sum.lvl0{ background:linear-gradient(180deg, var(--lvl0), rgba(0,0,0,.16)); border-color:var(--lvl0b); }
     .box.sum.lvl1{ background:linear-gradient(180deg, var(--lvl1), rgba(0,0,0,.16)); border-color:var(--lvl1b); }
     .box.sum.lvl2{ background:linear-gradient(180deg, var(--lvl2), rgba(0,0,0,.16)); border-color:var(--lvl2b); }
     .box.sum.lvl3{ background:linear-gradient(180deg, var(--lvl3), rgba(0,0,0,.16)); border-color:var(--lvl3b); }
 
-    .divider{
-      width:76%;
-      height:1px;
-      background:rgba(255,255,255,.14);
-      margin-top:2px;
-      display:block;
-    }
+    .divider{ width:76%; height:1px; background:rgba(255,255,255,.14); margin-top:2px; display:block; }
 
-    .titleRowInline{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      width:100%;
-    }
-    .boxTitle{
-      font-weight:1000;
-      color:rgba(234,240,255,.96);
-      font-size:20px;
-      letter-spacing:.2px;
-      line-height:1.1;
-    }
-    .badgeInline{
-      width:34px;height:34px;border-radius:999px;
-      border:1px solid rgba(255,255,255,.16);
-      background:rgba(255,255,255,.06);
-      display:flex;align-items:center;justify-content:center;
-    }
+    .titleRowInline{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; }
+    .boxTitle{ font-weight:1000; color:rgba(234,240,255,.96); font-size:20px; letter-spacing:.2px; line-height:1.1; }
+    .badgeInline{ width:34px;height:34px;border-radius:999px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); display:flex;align-items:center;justify-content:center; }
     .badgeInline.ok{ border-color:rgba(101,255,179,.44); background:rgba(101,255,179,.14); }
     .badgeInline.bad{ border-color:rgba(255,106,106,.44); background:rgba(255,106,106,.14); }
 
-    .time{
-      font-weight:1100;
-      font-size:28px;
-      letter-spacing:.2px;
-      line-height:1;
-    }
-    .time.muted{
-      color:rgba(234,240,255,.55);
-      font-weight:900;
-    }
+    .time{ font-weight:1100; font-size:28px; letter-spacing:.2px; line-height:1; }
+    .time.muted{ color:rgba(234,240,255,.55); font-weight:900; }
 
-    .sumStack{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-    }
-    .sumTag{
-      font-weight:1100;
-      font-size:18px;
-      letter-spacing:.2px;
-      padding:6px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-    }
-    .sumBig{
-      font-size:54px;
-      font-weight:1200;
-      line-height:1;
-      margin:0;
-      color:rgba(234,240,255,.96);
-    }
+    .sumStack{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
+    .sumTag{ font-weight:1100; font-size:18px; letter-spacing:.2px; padding:6px 12px; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); }
+    .sumBig{ font-size:54px; font-weight:1200; line-height:1; margin:0; color:rgba(234,240,255,.96); }
     .sumBig.ok{ color: var(--ok); }
     .sumBig.bad{ color: var(--danger); }
 
-    /* Mobile footer updated (not sticky) */
-    .updatedFooter{
-      display:none;
-      text-align:center;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.2px;
-      color:rgba(234,240,255,.72);
-      user-select:none;
-      -webkit-user-select:none;
-      margin-top:10px;
-    }
-    .updatedFooter .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:6px 10px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);
-    }
-    .updatedFooter .dot{
-      width:8px;height:8px;border-radius:99px;
-      background:rgba(101,255,179,.95);
-      box-shadow:0 0 0 4px rgba(101,255,179,.18);
-    }
+    .updatedFooter{ display:none; text-align:center; font-size:12px; font-weight:900; letter-spacing:.2px; color:rgba(234,240,255,.72); user-select:none; -webkit-user-select:none; margin-top:10px; }
+    .updatedFooter .pill{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
+    .updatedFooter .dot{ width:8px;height:8px;border-radius:99px; background:rgba(101,255,179,.95); box-shadow:0 0 0 4px rgba(101,255,179,.18); }
 
-    /* FIX: ปุ่มกลับสำหรับมือถือ ต้องไม่โผล่บน PC */
     #backBottom{ display:none; }
 
     @media (max-width:760px){
       .wrap{ padding:16px; }
-
       .updatedCorner{ display:none; }
       .updatedFooter{ display:block; }
-
       .boxes{ grid-template-columns:1fr; }
       .box{ min-height:104px; padding:14px 14px; }
-
       .actionStack{ margin-top:16px; padding-bottom:12px; }
       .actionStack .topline{ margin-top:10px; }
-      .actionStack a.btnlink button{
-        border-radius:999px;
-        padding:12px 14px;
-      }
-      .actionStack #checkBtn{
-        border-radius:18px;
-        padding:14px 16px;
-      }
-
-      /* Mobile: ซ่อนปุ่มกลับแบบ Desktop */
+      .actionStack a.btnlink button{ border-radius:999px; padding:12px 14px; }
+      .actionStack #checkBtn{ border-radius:18px; padding:14px 16px; }
       #backTop{ display:none; }
-
-      /* ✅ Mobile: โชว์ปุ่มกลับ "ตลอด" ตั้งแต่หน้าแรก */
       #backBottom{ display:flex; }
-
-      /* ปุ่มกลับให้เป็นโทนรอง ดูเรียบร้อย */
-      #backBottom a.btnlink button{
-        background:rgba(255,255,255,.08);
-        border:1px solid rgba(255,255,255,.14);
-        color:rgba(234,240,255,.92);
-      }
+      #backBottom a.btnlink button{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:rgba(234,240,255,.92); }
     }
   </style>
 </head>
@@ -332,15 +232,13 @@
 
       <div class="headerBlock">
         <div class="updatedCorner" id="updatedCorner">อัปเดตล่าสุด —</div>
-
         <h1>Check meditation status</h1>
-
         <p class="muted" id="weekHeader">กำลังคำนวณช่วงสัปดาห์...</p>
       </div>
 
       <label>รายชื่อ</label>
       <select id="nameSel">
-        <option value="">กำลังโหลดรายชื่อ...</option>
+        <option value="">— เลือกชื่อ —</option>
       </select>
 
       <label>วันที่ต้องการตรวจสอบ</label>
@@ -349,7 +247,6 @@
       <div class="actionStack" id="actionStack">
         <button id="checkBtn" type="button">ตรวจสอบสถานะ</button>
 
-        <!-- Mobile: อัปเดตอยู่ใต้ปุ่มตรวจสอบ -->
         <div class="updatedFooter" id="updatedFooter">
           <span class="pill">
             <span class="dot" aria-hidden="true"></span>
@@ -357,7 +254,6 @@
           </span>
         </div>
 
-        <!-- ✅ Mobile: ปุ่มกลับ (มีตั้งแต่หน้าแรก) -->
         <div class="topline" id="backBottom">
           <a class="btnlink" href="/"><button type="button">กลับไปบันทึกข้อมูล</button></a>
         </div>
@@ -365,7 +261,6 @@
 
       <div class="msg" id="out"></div>
 
-      <!-- Desktop: มีปุ่มกลับอันเดียว ไม่ซ้อน -->
       <div class="topline" id="backTop">
         <a class="btnlink" href="/"><button type="button">กลับหน้าบันทึกข้อมูล</button></a>
       </div>
@@ -380,9 +275,26 @@
   const dateSel = document.getElementById("dateSel");
   const btn = document.getElementById("checkBtn");
   const out = document.getElementById("out");
-
   const updatedCorner = document.getElementById("updatedCorner");
   const updatedFooterText = document.getElementById("updatedFooterText");
+
+  /* รายชื่อ hardcode จาก index.html */
+  const NAMES = [
+    "สุรเชษฐ์ (ตั้ม)", "บัญญัติ (แดง)", "รัชเศรษฐ์ (ยศ)",
+    "ชนุดม (ดอน)", "ทรงชัย (ทรง)", "สุรุ่งรัตน์ (เก่ง)",
+    "อติพร (โอ)", "เกสณี (เก๋)", "สมภพ (เอก)",
+    "ฐิตภรณ์ (เบลล์)", "อุมาพร (นก)", "ณัฐพล (ท๊อด)",
+    "กิตติพงษ์ (พี)", "ธนพร (พร)", "รายาวดี (เฟริน)",
+    "บัญญัติ (บอย)", "ธีรพล (ต้อม)", "นริศ (เอ็กซ์)",
+    "กิตติ (ตี๋)", "จารุวรรณ (จุ๋ม)", "ณัฏฐา (เมย์)",
+    "วรินทร (ต่อ)", "กิตติศักดิ์ (ใหม่)", "ราชัย (ชัย)",
+    "รัญชนา (จีน่า)", "อรวรา (ผักแพว)", "วรรณชัย (ดิว)",
+    "ธนกฤษ (พิว)", "บุญฤทธิ์ (ใหม่)", "จิรายุทธ (ลีโอ)",
+    "นนทชา (วิว)", "ยิ่งลักษณ์ (กุ้ง)", "พรชนัน (มาร์ค)",
+    "ศราวุฒิ (บอล)", "นันทพงศ์ (โบ๊ท)", "ณัฐวุฒิ (เฟียส)",
+    "กฤษดา (โจ)", "รณฤทธิ์ (เม่น)", "ธีรศักดิ์ (ต่าย)",
+    "ณภัทร (ตัน)", "เอกพจน์ (เอก)"
+  ];
 
   const TH_DOW = ["จันทร์","อังคาร","พุธ","พฤหัส","ศุกร์","เสาร์","อาทิตย์"];
 
@@ -394,7 +306,7 @@
   }
   function mondayOfWeekLocal(d){
     const x = new Date(d); x.setHours(0,0,0,0);
-    const day = x.getDay(); // Sun=0
+    const day = x.getDay();
     const diff = (day===0) ? -6 : (1-day);
     x.setDate(x.getDate()+diff);
     return x;
@@ -410,11 +322,8 @@
   function buildDateOptions(){
     const now = new Date();
     const mon = mondayOfWeekLocal(now);
-
     const todayISO = toISODateLocal(now);
     dateSel.innerHTML = "";
-
-    // ✅ เหลือแค่ จันทร์ - อาทิตย์ ของสัปดาห์ปัจจุบัน (ลบอาทิตย์สัปดาห์ที่แล้วออก)
     for (let i=0;i<7;i++){
       const d = new Date(mon); d.setDate(mon.getDate()+i);
       const iso = toISODateLocal(d);
@@ -424,7 +333,6 @@
       opt.textContent = label;
       dateSel.appendChild(opt);
     }
-
     dateSel.value = todayISO;
   }
 
@@ -443,7 +351,6 @@
   function setUpdatedNow(){
     const now = new Date();
     const hhmm = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
-
     updatedCorner.textContent = `อัปเดตล่าสุด ${hhmm}`;
     updatedFooterText.textContent = `อัปเดตล่าสุด ${hhmm}`;
   }
@@ -459,10 +366,8 @@
       const time = (v.time || v.hhmm || v.local || "").toString().trim();
       return { done, timeText: time ? `${time} น.` : "—" };
     }
-
     const s = (v ?? "").toString().trim();
     if (!s || s === "—" || s === "-") return { done:false, timeText:"—" };
-
     const done = /✅|ok|done|true|ครบ/i.test(s);
     const m = s.match(/(\d{1,2}:\d{2})/);
     return { done, timeText: m ? `${m[1]} น.` : "—" };
@@ -483,25 +388,17 @@
     const s1 = normalizeSession(data.sessions?.s1);
     const s2 = normalizeSession(data.sessions?.s2);
     const s3 = normalizeSession(data.sessions?.s3);
-
     const doneCount = Number.isFinite(Number(data.doneCount))
       ? Number(data.doneCount)
       : [s1.done, s2.done, s3.done].filter(Boolean).length;
-
     const dateISO = (data.logDate || "").toString();
     const name = (data.name || "").toString();
     const headerLine = `${formatISOToThaiLong(dateISO)} | ${name}`;
-
-    const headerHtml = `
-      <div class="resultHeader">
-        <div class="line">${escapeHtml(headerLine)}</div>
-      </div>
-    `;
+    const headerHtml = `<div class="resultHeader"><div class="line">${escapeHtml(headerLine)}</div></div>`;
 
     function boxHtml(title, st){
       const cls = st.done ? "ok" : "bad";
       const timeCls = (st.timeText === "—") ? "time muted" : "time";
-
       return `
         <div class="box ${cls}">
           <div class="titleRowInline">
@@ -510,28 +407,23 @@
           </div>
           <div class="divider"></div>
           <div class="${timeCls}">${escapeHtml(st.timeText)}</div>
-        </div>
-      `;
+        </div>`;
     }
 
     const lvl = Math.max(0, Math.min(3, doneCount));
     const lvlClass = ["lvl0","lvl1","lvl2","lvl3"][lvl];
-    const sumText = `${lvl}/3`;
     const sumTag = (lvl === 3) ? "ครบ" : "สรุป";
     const sumBigClass = (lvl === 3) ? "sumBig ok" : (lvl === 0 ? "sumBig bad" : "sumBig");
-
     const sumBox = `
       <div class="box sum ${lvlClass}">
         <div class="sumStack">
           <div class="sumTag">${sumTag}</div>
-          <div class="${sumBigClass}">${sumText}</div>
+          <div class="${sumBigClass}">${lvl}/3</div>
         </div>
-      </div>
-    `;
+      </div>`;
 
     out.className = "";
     const mobileFirst = isMobile();
-
     out.innerHTML = `
       ${headerHtml}
       <div class="boxes">
@@ -540,74 +432,44 @@
         ${boxHtml("ครั้งที่ 2", s2)}
         ${boxHtml("ครั้งที่ 3", s3)}
         ${mobileFirst ? "" : sumBox}
-      </div>
-    `;
-
+      </div>`;
     setUpdatedNow();
   }
 
   function setLoading(isLoading, msg){
     btn.disabled = isLoading;
     btn.textContent = isLoading ? "กำลังตรวจสอบ..." : "ตรวจสอบสถานะ";
-
-    if (isLoading) {
-      out.className = "msg";
-      out.textContent = msg || "กำลังตรวจสอบ...";
-    }
+    if (isLoading) { out.className = "msg"; out.textContent = msg || "กำลังตรวจสอบ..."; }
   }
 
-  async function loadNames(){
-    nameSel.innerHTML = `<option value="">— เลือกชื่อ —</option>`;
-    try {
-      const res = await fetch("/api/names");
-      const data = await res.json().catch(()=>({}));
-
-      if (!res.ok || !data.ok) {
-        nameSel.innerHTML = `<option value="">โหลดรายชื่อไม่สำเร็จ</option>`;
-        out.className = "msg bad";
-        out.textContent = `โหลดรายชื่อไม่สำเร็จ: ${data.error || "unknown_error"}`;
-        return;
-      }
-
-      const names = Array.isArray(data.names) ? data.names : [];
-      nameSel.innerHTML =
-        `<option value="">— เลือกชื่อ —</option>` +
-        names.map(n => `<option>${escapeHtml(n)}</option>`).join("");
-
-    } catch (e) {
-      nameSel.innerHTML = `<option value="">โหลดรายชื่อไม่สำเร็จ</option>`;
-      out.className = "msg bad";
-      out.textContent = `โหลดรายชื่อไม่สำเร็จ: ${e}`;
-    }
+  /* โลดรายชื่อจาก hardcode ไม่ต้องเรียก API */
+  function loadNames(){
+    nameSel.innerHTML =
+      `<option value="">— เลือกชื่อ —</option>` +
+      NAMES.map(n => `<option>${escapeHtml(n)}</option>`).join("");
   }
 
   async function runCheck(){
     const name = (nameSel.value || "").trim();
     const logDate = (dateSel.value || "").trim();
-
     if (!name || !logDate) {
       out.className = "msg bad";
       out.textContent = "กรุณาเลือกรายชื่อ และ วันที่ต้องการตรวจสอบ";
       return;
     }
-
     setLoading(true, "กำลังตรวจสอบ...");
-
     try {
       const q = new URLSearchParams({ name, logDate });
       const res = await fetch(`/api/checkStatus?${q.toString()}`);
       const data = await res.json().catch(()=>({}));
-
       if (!res.ok || !data.ok) {
         out.className = "msg bad";
         out.textContent = `ตรวจสอบไม่สำเร็จ: ${data.error || "unknown_error"}`;
         setLoading(false);
         return;
       }
-
       renderBoxes(data);
       setLoading(false);
-
     } catch (e) {
       out.className = "msg bad";
       out.textContent = `ตรวจสอบไม่สำเร็จ: ${e}`;
@@ -615,14 +477,12 @@
     }
   }
 
-  // Auto-check on mobile
   let autoTimer = null;
   function scheduleAutoCheck(){
     if (!isMobile()) return;
     const name = (nameSel.value || "").trim();
     const logDate = (dateSel.value || "").trim();
     if (!name || !logDate) return;
-
     clearTimeout(autoTimer);
     autoTimer = setTimeout(() => runCheck(), 250);
   }
@@ -630,12 +490,8 @@
   btn.addEventListener("click", runCheck);
   nameSel.addEventListener("change", scheduleAutoCheck);
   dateSel.addEventListener("change", scheduleAutoCheck);
-
   document.addEventListener("keydown", (ev) => {
-    if (ev.key === "Enter") {
-      ev.preventDefault();
-      runCheck();
-    }
+    if (ev.key === "Enter") { ev.preventDefault(); runCheck(); }
   });
 
   showWeekHeader();
