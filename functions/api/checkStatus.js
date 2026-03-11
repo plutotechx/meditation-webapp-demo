@@ -1,9 +1,22 @@
 import { json } from "./_util.js";
 
-const CACHE_TTL      = 45;   // วินาที — request ซ้ำในช่วงนี้ตอบจาก cache ทันที
-const FETCH_TIMEOUT  = 8000; // ms — ป้องกัน GAS ค้างไม่มีกำหนด
+const CACHE_TTL     = 45;
+const FETCH_TIMEOUT = 25000; // เพิ่มจาก 8000 → 25000ms รองรับ GAS cold start
+const RETRY_DELAY   = 1500;  // รอ 1.5 วิ แล้ว retry 1 ครั้ง
 
-export async function onRequestGet({ request, env }) {
+async function fetchWithTimeout(url, timeoutMs) {
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { method: "GET", signal: ctrl.signal });
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function onRequestGet(ctx) {
+  const { request, env } = ctx;
   try {
     const url     = new URL(request.url);
     const name    = (url.searchParams.get("name")    || "").trim();
@@ -12,41 +25,46 @@ export async function onRequestGet({ request, env }) {
     if (!name || !logDate) {
       return json({ ok: false, error: "missing_fields" }, 400);
     }
-    if (!env.GAS_URL || !env.SECRET) {
+
+    const GAS_URL = env?.GAS_URL || ctx.cloudflare?.env?.GAS_URL;
+    const SECRET  = env?.SECRET  || ctx.cloudflare?.env?.SECRET;
+    if (!GAS_URL || !SECRET) {
       return json({ ok: false, error: "missing_env" }, 500);
     }
 
-    // ── Cloudflare Cache (key = name + logDate ต่อคนต่อวัน) ──
+    // ── Cloudflare Cache ──
     const cache    = caches.default;
     const cacheKey = new Request(
       `https://cache.internal/checkStatus?name=${encodeURIComponent(name)}&logDate=${encodeURIComponent(logDate)}`
     );
-
     const cached = await cache.match(cacheKey);
-    if (cached) return cached; // ✅ ตอบทันที ไม่ถึง GAS
+    if (cached) return cached;
 
-    // ── ยิง GAS พร้อม timeout ──
-    const gas = new URL(env.GAS_URL);
+    // ── Build GAS URL ──
+    const gas = new URL(GAS_URL);
     gas.searchParams.set("action",  "checkStatus");
-    gas.searchParams.set("secret",  env.SECRET);
+    gas.searchParams.set("secret",  SECRET);
     gas.searchParams.set("name",    name);
     gas.searchParams.set("logDate", logDate);
+    const gasUrl = gas.toString();
 
-    const ctrl  = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
-
+    // ── Fetch พร้อม retry 1 ครั้ง ──
     let res, out;
-    try {
-      res = await fetch(gas.toString(), { method: "GET", signal: ctrl.signal });
-      out = await res.json().catch(() => ({}));
-    } catch (fetchErr) {
-      const isTimeout = fetchErr?.name === "AbortError";
-      return json({ ok: false, error: isTimeout ? "gas_timeout" : String(fetchErr) }, 500);
-    } finally {
-      clearTimeout(timer);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        if (attempt > 0) await new Promise(r => setTimeout(r, RETRY_DELAY));
+        res = await fetchWithTimeout(gasUrl, FETCH_TIMEOUT);
+        out = await res.json().catch(() => ({}));
+        if (res.ok && out.ok !== false) break;
+      } catch (fetchErr) {
+        if (attempt === 1) {
+          const isTimeout = fetchErr?.name === "AbortError";
+          return json({ ok: false, error: isTimeout ? "gas_timeout" : String(fetchErr) }, 500);
+        }
+      }
     }
 
-    // ── สร้าง response พร้อม Cache-Control ──
+    // ── Cache response ที่สำเร็จ ──
     const response = new Response(JSON.stringify(out), {
       status: res.ok ? 200 : 500,
       headers: {
@@ -56,11 +74,9 @@ export async function onRequestGet({ request, env }) {
       },
     });
 
-    // เก็บ cache เฉพาะ response ที่สำเร็จเท่านั้น
     if (res.ok && out.ok !== false) {
-      await cache.put(cacheKey, response.clone());
+      ctx.waitUntil(cache.put(cacheKey, response.clone()));
     }
-
     return response;
 
   } catch (e) {

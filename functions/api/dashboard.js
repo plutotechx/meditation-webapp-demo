@@ -1,21 +1,44 @@
 import { json } from "./_util.js";
 
-export async function onRequestGet({ request, env }) {
+const FETCH_TIMEOUT = 25000; // เพิ่ม timeout รองรับ GAS cold start
+
+async function fetchWithTimeout(url, timeoutMs) {
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const u = new URL(request.url);
+    const res = await fetch(url, { method: "GET", signal: ctrl.signal });
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function onRequestGet(ctx) {
+  const { request, env } = ctx;
+  try {
+    const u          = new URL(request.url);
     const weekOffset = (u.searchParams.get("weekOffset") || "0").trim();
 
-    if (!env.GAS_URL || !env.SECRET) {
+    const GAS_URL = env?.GAS_URL || ctx.cloudflare?.env?.GAS_URL;
+    const SECRET  = env?.SECRET  || ctx.cloudflare?.env?.SECRET;
+    if (!GAS_URL || !SECRET) {
       return json({ ok: false, error: "missing_env" }, 500);
     }
 
-    const url = new URL(env.GAS_URL);
-    url.searchParams.set("action", "dashboard");
-    url.searchParams.set("secret", env.SECRET);
+    const url = new URL(GAS_URL);
+    url.searchParams.set("action",     "dashboard");
+    url.searchParams.set("secret",     SECRET);
     url.searchParams.set("weekOffset", weekOffset);
 
-    const res = await fetch(url.toString(), { method: "GET" });
-    const out = await res.json().catch(() => ({}));
+    let res, out;
+    try {
+      res = await fetchWithTimeout(url.toString(), FETCH_TIMEOUT);
+      out = await res.json().catch(() => ({}));
+    } catch (fetchErr) {
+      const isTimeout = fetchErr?.name === "AbortError";
+      return json({ ok: false, error: isTimeout ? "gas_timeout" : String(fetchErr) }, 500);
+    }
+
     return json(out, res.ok ? 200 : 500);
 
   } catch (e) {
