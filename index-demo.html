@@ -60,12 +60,13 @@
     #statusBar{
       margin: 10px 0 4px;
       overflow: hidden;
-      transition: max-height .3s ease, opacity .3s ease;
+      transition: max-height .35s ease, opacity .3s ease;
       max-height: 0;
       opacity: 0;
     }
     #statusBar.visible{
-      max-height: 160px;
+      /* desktop 1 แถว ~100px / mobile 2 แถว ~220px — ใช้ none เพื่อไม่ clip */
+      max-height: 300px;
       opacity: 1;
     }
 
@@ -73,9 +74,10 @@
       display: grid;
       grid-template-columns: repeat(4, minmax(0,1fr));
       gap: 8px;
-      padding: 4px 0 8px;
+      padding: 4px 0 10px;
     }
-    @media(max-width:500px){
+    /* มือถือ: 2 คอลัมน์ */
+    @media(max-width:559px){
       .status-boxes{ grid-template-columns: repeat(2,1fr); }
     }
 
@@ -90,7 +92,7 @@
       justify-content: center;
       gap: 6px;
       text-align: center;
-      min-height: 80px;
+      min-height: 86px;
     }
     .sbox.ok{
       background: linear-gradient(180deg, var(--tint-ok), rgba(0,0,0,.14));
@@ -105,7 +107,6 @@
       border-color: rgba(255,255,255,.08);
     }
     .sbox-title{font-size:12px;font-weight:800;color:rgba(234,240,255,.85);letter-spacing:.2px;}
-    .sbox-icon{font-size:20px;line-height:1;}
     .sbox-time{font-size:11px;font-weight:700;color:rgba(234,240,255,.6);}
 
     .sbox-sum-count{font-size:26px;font-weight:1000;line-height:1;color:rgba(234,240,255,.95);}
@@ -326,6 +327,9 @@
 
   function getTodayISO(){ return toISODateLocal(new Date()); }
 
+  // ✅ FIX: อ่าน mark === "✅" แทน done === true
+  function isDone(st){ return st?.mark === "✅" || st?.done === true; }
+
   function showStatusLoading(){
     statusBar.classList.add("visible");
     statusBoxes.innerHTML = `
@@ -340,23 +344,26 @@
     const s1 = data.sessions?.s1 || {};
     const s2 = data.sessions?.s2 || {};
     const s3 = data.sessions?.s3 || {};
-    const done = [s1.done, s2.done, s3.done].filter(Boolean).length;
+    const doneCount = data.doneCount ?? [s1,s2,s3].filter(isDone).length;
 
     function box(title, st){
-      const cls  = st.done ? "ok" : "bad";
-      const icon = st.done
+      const ok  = isDone(st);
+      const cls = ok ? "ok" : "bad";
+      const icon = ok
         ? `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 7L10.5 16.5L4 10" stroke="#65ffb3" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`
         : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#ff6a6a" stroke-width="2.8" stroke-linecap="round"/></svg>`;
-      const timeStr = (st.time && st.time !== "—") ? `<div class="sbox-time">${st.time} น.</div>` : `<div class="sbox-time">—</div>`;
+      const timeStr = (st.time && st.time !== "—")
+        ? `<div class="sbox-time">${st.time} น.</div>`
+        : `<div class="sbox-time">—</div>`;
       return `<div class="sbox ${cls}"><div class="sbox-title">${title}</div>${icon}${timeStr}</div>`;
     }
 
-    const sumCls = done===3 ? "all" : done===0 ? "none" : "";
+    const sumCls = doneCount===3 ? "all" : doneCount===0 ? "none" : "";
     const sumBox = `
       <div class="sbox">
         <div class="sbox-title">สรุป</div>
-        <div class="sbox-sum-count ${sumCls}">${done}/3</div>
-        <div class="sbox-sum-label">${done===3?"ครบแล้ว!":done===0?"ยังไม่มี":"กำลังดี"}</div>
+        <div class="sbox-sum-count ${sumCls}">${doneCount}/3</div>
+        <div class="sbox-sum-label">${doneCount===3?"ครบแล้ว!":doneCount===0?"ยังไม่มี":"กำลังดี"}</div>
       </div>`;
 
     statusBoxes.innerHTML = box("ครั้งที่ 1",s1) + box("ครั้งที่ 2",s2) + box("ครั้งที่ 3",s3) + sumBox;
