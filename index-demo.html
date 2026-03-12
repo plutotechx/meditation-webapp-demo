@@ -299,13 +299,12 @@
 
   // ===== GREETING SPLASH =====
   (function(){
-    const SPLASH_MS = 1900; // อยู่กี่ ms ก่อน fade ออก
+    const SPLASH_MS = 1900;
     const now  = new Date();
     const h    = now.getHours();
-    const mm   = now.getMonth() + 1; // 1-12
+    const mm   = now.getMonth() + 1;
     const dd   = now.getDate();
 
-    // วันพิเศษ { m, d, emoji, msg, sub }
     const SPECIAL = [
       { m:1,  d:1,  emoji:"🎆", msg:"สวัสดีปีใหม่!", sub:"Happy New Year" },
       { m:2,  d:14, emoji:"💝", msg:"สุขสันต์วันวาเลนไทน์", sub:"Happy Valentine's Day" },
@@ -325,7 +324,6 @@
       { m:12, d:31, emoji:"🎉", msg:"ส่งท้ายปีเก่า!", sub:"สวัสดีปีใหม่ล่วงหน้า" },
     ];
 
-    // ทักทายตามช่วงเวลา
     const TIME_GREET =
       h >= 5  && h < 12 ? { emoji:"🌅", msg:"อรุณสวัสดิ์" } :
       h >= 12 && h < 17 ? { emoji:"☀️", msg:"สวัสดีตอนบ่าย" } :
@@ -336,7 +334,6 @@
     const emoji   = special ? special.emoji : TIME_GREET.emoji;
     const msg     = special ? special.msg   : TIME_GREET.msg;
 
-    // วันที่แบบไทยเต็ม พ.ศ.
     const THmonth = ["","มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
                      "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
     const TH_DOW2 = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"];
@@ -359,13 +356,11 @@
 
     barEl.style.setProperty("--bar-dur", (SPLASH_MS / 1000) + "s");
 
-    // fade ออก
     setTimeout(() => {
       splash.classList.add("hide");
       splash.addEventListener("animationend", () => splash.remove(), { once: true });
     }, SPLASH_MS);
 
-    // กด/แตะที่ไหนก็ได้ → ปิดทันที
     splash.addEventListener("click", () => {
       splash.classList.add("hide");
       splash.addEventListener("animationend", () => splash.remove(), { once: true });
@@ -381,9 +376,9 @@
   })();
 
   // ===== LOG DATE OPTIONS =====
-  const logDateEl      = document.getElementById("logDate");
-  const weekdayHiddenEl= document.getElementById("weekdayHidden");
-  const TH_DOW=["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัส","ศุกร์","เสาร์"];
+  const logDateEl       = document.getElementById("logDate");
+  const weekdayHiddenEl = document.getElementById("weekdayHidden");
+  const TH_DOW = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัส","ศุกร์","เสาร์"];
 
   function buildLogDateOptions(){
     const now=new Date(), todayISO=getTodayISO(), mon=mondayOfWeekLocal(now);
@@ -409,7 +404,7 @@
 
   // ===== PREFETCH ENGINE =====
   const dot = document.getElementById("prefetchDot");
-  let prefetchCache = null;
+  let prefetchCache   = null;
   let prefetchPromise = null;
 
   function setDot(state){ dot.className=""; dot.classList.add(state); }
@@ -418,19 +413,25 @@
     const logDate = getTodayISO();
     if(prefetchCache && prefetchCache.date === logDate) return prefetchCache;
     setDot("loading");
-    const q   = new URLSearchParams({ logDate });
-    const res = await fetch(`/api/prefetchToday?${q}`);
-    const out = await res.json().catch(()=>({}));
-    if(out.ok !== false && out.data){
-      prefetchCache = { date: logDate, data: out.data };
-      setDot("ready");
-      return prefetchCache;
-    } else {
+    try {
+      const q   = new URLSearchParams({ logDate });
+      const res = await fetch(`/api/prefetchToday?${q}`);
+      const out = await res.json().catch(()=>({}));
+      if(out.ok !== false && out.data){
+        prefetchCache = { date: logDate, data: out.data };
+        setDot("ready");
+        return prefetchCache;
+      } else {
+        setDot("error");
+        return null;
+      }
+    } catch(e) {
       setDot("error");
       return null;
     }
   }
 
+  // ✅ เริ่ม prefetch ทันทีตอนโหลดหน้า
   prefetchPromise = prefetchToday();
 
   // ===== STATUS BAR =====
@@ -493,20 +494,40 @@
     }catch(e){ if(e.name==="AbortError")return; showStatusError(); }
   }
 
+  // ✅ แก้ใหม่ — shimmer ทันที + timeout 2 วิ
   nameSel.addEventListener("change", async () => {
-    const name=(nameSel.value||"").trim();
-    if(!name){ hideStatus(); return; }
-    const logDate=getTodayISO();
-    const pc = await prefetchPromise;
-    if(pc && pc.data && pc.date===logDate){
-      const personData = pc.data[name];
-      if(personData){
-        showStatusResult(personData);
-      } else {
-        showStatusResult({ doneCount:0, sessions:{ s1:{mark:"—",time:""}, s2:{mark:"—",time:""}, s3:{mark:"—",time:""} } });
-      }
+    const name = (nameSel.value || "").trim();
+    if (!name) { hideStatus(); return; }
+
+    const logDate = getTodayISO();
+
+    // แสดง shimmer ทันทีก่อนเลย ไม่รอ
+    showStatusLoading();
+
+    // ถ้า prefetch พร้อมแล้ว → ใช้เลยทันที
+    if (prefetchCache && prefetchCache.date === logDate) {
+      const personData = prefetchCache.data[name];
+      showStatusResult(personData || {
+        doneCount: 0,
+        sessions: { s1:{mark:"—",time:""}, s2:{mark:"—",time:""}, s3:{mark:"—",time:""} }
+      });
       return;
     }
+
+    // รอ prefetch แบบมี timeout 2 วิ
+    const timeout = new Promise(r => setTimeout(() => r(null), 2000));
+    const pc = await Promise.race([prefetchPromise, timeout]);
+
+    if (pc && pc.data && pc.date === logDate) {
+      const personData = pc.data[name];
+      showStatusResult(personData || {
+        doneCount: 0,
+        sessions: { s1:{mark:"—",time:""}, s2:{mark:"—",time:""}, s3:{mark:"—",time:""} }
+      });
+      return;
+    }
+
+    // timeout เกิน 2 วิ → fallback checkStatus
     fetchStatusFallback(name, logDate);
   });
 
@@ -533,9 +554,9 @@
   })();
 
   // ===== SUBMIT =====
-  const form=document.getElementById("f");
-  const btn=document.getElementById("btn");
-  const msg=document.getElementById("msg");
+  const form = document.getElementById("f");
+  const btn  = document.getElementById("btn");
+  const msg  = document.getElementById("msg");
 
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -553,6 +574,7 @@
         msg.className="msg ok";
         msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
         window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
+        // ✅ ล้าง cache แล้ว prefetch ใหม่ทันที
         prefetchCache=null;
         prefetchPromise=prefetchToday();
         const selName=(nameSel.value||"").trim();
