@@ -328,22 +328,20 @@
   function getTodayISO(){ return toISODateLocal(new Date()); }
 
   // ===== GREETING SPLASH =====
-  // ✅ ข้อ 3: กัน splash ซ้ำหลัง reload
   const SKIP_GREET_KEY = "skipGreetOnce";
   const skipGreet = sessionStorage.getItem(SKIP_GREET_KEY) === "1";
-  sessionStorage.removeItem(SKIP_GREET_KEY); // ล้างทันทีหลังอ่าน — ใช้ได้แค่ครั้งเดียว
+  sessionStorage.removeItem(SKIP_GREET_KEY);
 
   (function(){
     const splash = document.getElementById("greetSplash");
 
     if(skipGreet){
-      // ข้ามทันที ไม่แสดง splash
       splash.remove();
       return;
     }
 
-    const SPLASH_MS   = 5000; // ✅ รวม 5 วิ
-    const PHASE2_MS   = 2500; // เวลาเปลี่ยน phase
+    const SPLASH_MS   = 5000;
+    const PHASE2_MS   = 2500;
 
     const now  = new Date();
     const h    = now.getHours();
@@ -402,7 +400,6 @@
 
     barEl.style.setProperty("--bar-dur", (SPLASH_MS / 1000) + "s");
 
-    // ✅ Phase 2: fade เปลี่ยนข้อความหลัง 2.5 วิ
     const phase2Timer = setTimeout(() => {
       subEl.style.opacity = "0";
       setTimeout(() => {
@@ -463,12 +460,14 @@
 
   function setDot(state){ dot.className=""; dot.classList.add(state); }
 
-  async function prefetchToday(){
+  // bustCache=true ใช้หลัง submit เพื่อดึงข้อมูลสด ข้าม Cloudflare cache [web:145][web:154]
+  async function prefetchToday(bustCache = false){
     const logDate = getTodayISO();
-    if(prefetchCache && prefetchCache.date === logDate) return prefetchCache;
+    if(!bustCache && prefetchCache && prefetchCache.date === logDate) return prefetchCache;
     setDot("loading");
     try{
-      const q   = new URLSearchParams({ logDate });
+      const q = new URLSearchParams({ logDate });
+      if(bustCache) q.set("_bust", Date.now().toString());
       const res = await fetch(`/api/prefetchToday?${q}`);
       const out = await res.json().catch(()=>({}));
       if(out.ok !== false && out.data){
@@ -487,7 +486,7 @@
 
   prefetchPromise = prefetchToday();
 
-  // ===== SESSION DROPDOWN — ✅ ข้อ 1: แสดงสถานะในตัวเลือก =====
+  // ===== SESSION DROPDOWN =====
   const sessionSel = document.getElementById("sessionSel");
 
   const SESSION_KEYS = [
@@ -497,7 +496,6 @@
   ];
 
   function updateSessionDropdown(sessionData){
-    // เก็บค่าที่เลือกอยู่ไว้
     const prev = sessionSel.value;
     sessionSel.innerHTML = `<option value="">— เลือกช่วง —</option>`;
     SESSION_KEYS.forEach(({ key, label }) => {
@@ -506,10 +504,9 @@
       const opt  = document.createElement("option");
       opt.value       = label;
       opt.textContent = done ? `${label}  ✅` : `${label}  ⏳`;
-      opt.disabled    = done; // ทำแล้ว → เลือกไม่ได้
+      opt.disabled    = done;
       sessionSel.appendChild(opt);
     });
-    // คืนค่าที่เลือกไว้ถ้ายังเลือกได้
     if(prev){
       const match = [...sessionSel.options].find(o => o.value === prev && !o.disabled);
       if(match) sessionSel.value = prev;
@@ -560,10 +557,8 @@
     statusBoxes.innerHTML=box("ครั้งที่ 1",s1)+box("ครั้งที่ 2",s2)+box("ครั้งที่ 3",s3)+sumBox;
     statusBar.classList.add("visible");
 
-    // ✅ ข้อ 1: อัปเดต session dropdown
     updateSessionDropdown(data.sessions);
 
-    // ✅ ข้อ 2: ครบแล้ว → แสดง allDone popup หลัง 3 วิ
     clearTimeout(allDoneTimer);
     if(doneCount === 3){
       allDoneTimer = setTimeout(showAllDonePopup, 3000);
@@ -688,10 +683,9 @@
         msg.className="msg ok";
         msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
         window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
-        // ✅ ข้อ 3: set flag กัน splash ซ้ำ ก่อน reload
         sessionStorage.setItem(SKIP_GREET_KEY, "1");
         prefetchCache=null;
-        prefetchPromise=prefetchToday();
+        prefetchPromise=prefetchToday(true);
         const selName=(nameSel.value||"").trim();
         delete fallbackCache[selName+"|"+getTodayISO()];
         form.reset();
