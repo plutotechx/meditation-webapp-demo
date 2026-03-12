@@ -28,6 +28,7 @@
     #weekHeader{margin:0;color:rgba(234,240,255,.78);font-weight:800;}
     label{display:block;margin:12px 0 6px}
     select,input{width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.18);background:var(--input);color:#fff;padding:12px 12px;outline:none}
+    select option:disabled{ color:rgba(234,240,255,.35); }
     .grid{display:grid;grid-template-columns:1fr;gap:12px}
     @media(min-width:760px){ .grid{grid-template-columns:1fr 1fr} }
     button{margin-top:14px;width:100%;padding:12px 14px;border:0;border-radius:14px;background:var(--btn);color:var(--btnText);font-weight:800;cursor:pointer}
@@ -44,31 +45,21 @@
       margin: 10px 0 4px;
       overflow: hidden;
       transition: max-height .35s ease, opacity .3s ease;
-      max-height: 0;
-      opacity: 0;
+      max-height: 0; opacity: 0;
     }
     #statusBar.visible{ max-height: 300px; opacity: 1; }
-
     .status-boxes{
       display: grid;
       grid-template-columns: repeat(4, minmax(0,1fr));
-      gap: 8px;
-      padding: 4px 0 10px;
+      gap: 8px; padding: 4px 0 10px;
     }
     @media(max-width:559px){ .status-boxes{ grid-template-columns: repeat(2,1fr); } }
-
     .sbox{
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      padding: 10px 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      text-align: center;
-      min-height: 86px;
+      border-radius: 14px; border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18); padding: 10px 8px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 6px; text-align: center; min-height: 86px;
     }
     .sbox.ok{ background: linear-gradient(180deg, var(--tint-ok), rgba(0,0,0,.14)); border-color: var(--tint-border-ok); }
     .sbox.bad{ background: linear-gradient(180deg, var(--tint-bad), rgba(0,0,0,.14)); border-color: var(--tint-border-bad); }
@@ -83,8 +74,7 @@
     /* prefetch dot */
     #prefetchDot{
       display:inline-block;width:6px;height:6px;border-radius:50%;
-      background:rgba(255,255,255,.2);margin-left:6px;
-      transition:background .3s;
+      background:rgba(255,255,255,.2);margin-left:6px;transition:background .3s;
     }
     #prefetchDot.loading{ background:#f5c542; animation:pulse .8s infinite alternate; }
     #prefetchDot.ready{   background:#65ffb3; }
@@ -94,8 +84,7 @@
     .shimmer{
       width:100%;height:12px;border-radius:6px;
       background:linear-gradient(90deg,rgba(255,255,255,.06) 25%,rgba(255,255,255,.13) 50%,rgba(255,255,255,.06) 75%);
-      background-size:200% 100%;
-      animation: shimmer 1.2s infinite;
+      background-size:200% 100%; animation: shimmer 1.2s infinite;
     }
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
@@ -121,6 +110,34 @@
     .success-icon{width:86px;height:86px;border-radius:999px;background:var(--green);display:grid;place-items:center;box-shadow:0 14px 30px rgba(33,177,75,.25);}
     .success-text{font-size:clamp(22px,2.6vw,30px);font-weight:600;color:var(--text);letter-spacing:.2px;text-shadow:0 2px 18px rgba(0,0,0,.45);margin:0;}
 
+    /* ===== All Done Popup ===== */
+    #allDoneOverlay{
+      position:fixed;inset:0;display:none;place-items:center;
+      background:rgba(0,0,0,.6);z-index:10000;
+      animation:overlayIn .2s ease-out forwards;
+    }
+    #allDoneOverlay.is-open{ display:grid; }
+    .alldone-card{
+      width:min(460px,88vw);border-radius:24px;
+      background:linear-gradient(160deg,rgba(20,40,30,.85),rgba(10,20,15,.9));
+      border:1px solid rgba(101,255,179,.3);
+      box-shadow:0 20px 60px rgba(0,0,0,.6), 0 0 40px rgba(101,255,179,.08);
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      padding:36px 32px 28px;text-align:center;
+      display:grid;gap:16px;justify-items:center;
+      transform:translateY(8px) scale(.97);opacity:0;
+      animation:cardIn .28s .05s ease-out forwards;
+    }
+    .alldone-emoji{ font-size:56px;line-height:1;filter:drop-shadow(0 4px 16px rgba(101,255,179,.3)); }
+    .alldone-title{ font-size:clamp(20px,3vw,26px);font-weight:800;color:var(--ok);margin:0;letter-spacing:.3px; }
+    .alldone-sub{ font-size:clamp(13px,1.8vw,15px);color:rgba(234,240,255,.65);margin:0;line-height:1.6; }
+    .alldone-btn{
+      margin-top:8px;padding:11px 32px;border:0;border-radius:14px;
+      background:var(--ok);color:#061a10;font-weight:800;font-size:15px;
+      cursor:pointer;width:auto;transition:opacity .2s;
+    }
+    .alldone-btn:hover{ opacity:.85; }
+
     /* ===== Greeting Splash ===== */
     #greetSplash{
       position:fixed;inset:0;z-index:19999;
@@ -137,10 +154,8 @@
     @keyframes splashOut{from{opacity:1}to{opacity:0}}
 
     .greet-card{
-      text-align:center;
-      display:grid;gap:12px;
-      padding:36px 40px;
-      border-radius:24px;
+      text-align:center; display:grid; gap:12px;
+      padding:36px 40px; border-radius:24px;
       background:linear-gradient(160deg,rgba(50,66,80,.55),rgba(18,26,38,.6));
       border:1px solid rgba(255,255,255,.18);
       box-shadow:0 20px 60px rgba(0,0,0,.5);
@@ -150,14 +165,18 @@
       max-width: min(480px, 88vw);
     }
     @keyframes greetCardIn{to{transform:translateY(0) scale(1);opacity:1;}}
-    .greet-emoji{font-size:52px;line-height:1;filter:drop-shadow(0 4px 14px rgba(0,0,0,.4));}
-    .greet-msg{font-size:clamp(22px,3.5vw,30px);font-weight:800;color:var(--text);margin:0;letter-spacing:.3px;}
-    .greet-special{font-size:clamp(13px,1.8vw,16px);font-weight:600;color:rgba(234,240,255,.65);margin:0;}
-    .greet-date{font-size:clamp(13px,1.8vw,15px);color:rgba(234,240,255,.5);margin:0;font-weight:500;letter-spacing:.2px;}
+    .greet-emoji{ font-size:52px;line-height:1;filter:drop-shadow(0 4px 14px rgba(0,0,0,.4)); }
+    .greet-msg{ font-size:clamp(22px,3.5vw,30px);font-weight:800;color:var(--text);margin:0;letter-spacing:.3px; }
+    .greet-special{ font-size:clamp(13px,1.8vw,16px);font-weight:600;color:rgba(234,240,255,.65);margin:0; }
+    .greet-date{ font-size:clamp(13px,1.8vw,15px);color:rgba(234,240,255,.5);margin:0;font-weight:500;letter-spacing:.2px; }
+    .greet-sub{
+      font-size:clamp(12px,1.6vw,14px);color:rgba(234,240,255,.45);margin:0;
+      min-height:20px;transition:opacity .6s ease;
+    }
     .greet-bar{
       width:0%;height:3px;border-radius:99px;
       background:linear-gradient(90deg,rgba(106,169,255,.8),rgba(101,255,179,.8));
-      animation:greetBar var(--bar-dur,1.8s) .3s linear forwards;
+      animation:greetBar var(--bar-dur,4.5s) .3s linear forwards;
       align-self:center;
     }
     @keyframes greetBar{from{width:0%}to{width:100%}}
@@ -170,10 +189,11 @@
   <div id="greetSplash">
     <div class="greet-card">
       <div class="greet-emoji" id="greetEmoji"></div>
-      <p  class="greet-msg"    id="greetMsg"></p>
+      <p  class="greet-msg"     id="greetMsg"></p>
       <p  class="greet-special" id="greetSpecial" style="display:none"></p>
-      <p  class="greet-date"   id="greetDate"></p>
-      <div class="greet-bar"   id="greetBar"></div>
+      <p  class="greet-date"    id="greetDate"></p>
+      <p  class="greet-sub"     id="greetSub"></p>
+      <div class="greet-bar"    id="greetBar"></div>
     </div>
   </div>
 
@@ -245,11 +265,11 @@
           </div>
           <div>
             <label>ช่วงเวลา การทำสมาธิ</label>
-            <select name="session" required>
+            <select name="session" id="sessionSel" required>
               <option value="">— เลือกช่วง —</option>
-              <option>ครั้งที่ 1 / ตื่นนอน-เช้า</option>
-              <option>ครั้งที่ 2 / ระหว่างวัน</option>
-              <option>ครั้งที่ 3 / ก่อนนอน-ค่ำ</option>
+              <option value="ครั้งที่ 1 / ตื่นนอน-เช้า">ครั้งที่ 1 / ตื่นนอน-เช้า</option>
+              <option value="ครั้งที่ 2 / ระหว่างวัน">ครั้งที่ 2 / ระหว่างวัน</option>
+              <option value="ครั้งที่ 3 / ก่อนนอน-ค่ำ">ครั้งที่ 3 / ก่อนนอน-ค่ำ</option>
             </select>
           </div>
         </div>
@@ -285,6 +305,16 @@
     </div>
   </div>
 
+  <!-- All Done Popup -->
+  <div id="allDoneOverlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="alldone-card">
+      <div class="alldone-emoji">🧘</div>
+      <p class="alldone-title">วันนี้คุณทำสมาธิครบแล้ว!</p>
+      <p class="alldone-sub">ทำสมาธิครบ 3 ครั้งในวันนี้แล้ว<br>ขอบคุณที่ดูแลตัวเองทุกวัน 🙏</p>
+      <button class="alldone-btn" id="allDoneCloseBtn">รับทราบ</button>
+    </div>
+  </div>
+
 <script>
   // ===== DATE UTILS =====
   function pad2(n){ return String(n).padStart(2,"0"); }
@@ -298,8 +328,23 @@
   function getTodayISO(){ return toISODateLocal(new Date()); }
 
   // ===== GREETING SPLASH =====
+  // ✅ ข้อ 3: กัน splash ซ้ำหลัง reload
+  const SKIP_GREET_KEY = "skipGreetOnce";
+  const skipGreet = sessionStorage.getItem(SKIP_GREET_KEY) === "1";
+  sessionStorage.removeItem(SKIP_GREET_KEY); // ล้างทันทีหลังอ่าน — ใช้ได้แค่ครั้งเดียว
+
   (function(){
-    const SPLASH_MS = 1900;
+    const splash = document.getElementById("greetSplash");
+
+    if(skipGreet){
+      // ข้ามทันที ไม่แสดง splash
+      splash.remove();
+      return;
+    }
+
+    const SPLASH_MS   = 5000; // ✅ รวม 5 วิ
+    const PHASE2_MS   = 2500; // เวลาเปลี่ยน phase
+
     const now  = new Date();
     const h    = now.getHours();
     const mm   = now.getMonth() + 1;
@@ -332,23 +377,24 @@
 
     const special = SPECIAL.find(s => s.m === mm && s.d === dd);
     const emoji   = special ? special.emoji : TIME_GREET.emoji;
-    const msg     = special ? special.msg   : TIME_GREET.msg;
+    const greetMsg = special ? special.msg  : TIME_GREET.msg;
 
     const THmonth = ["","มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
                      "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
     const TH_DOW2 = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"];
     const dateStr = `วัน${TH_DOW2[now.getDay()]}ที่ ${dd} ${THmonth[mm]} พ.ศ. ${now.getFullYear()+543}`;
 
-    const splash    = document.getElementById("greetSplash");
     const emojiEl   = document.getElementById("greetEmoji");
     const msgEl     = document.getElementById("greetMsg");
     const specialEl = document.getElementById("greetSpecial");
     const dateEl    = document.getElementById("greetDate");
+    const subEl     = document.getElementById("greetSub");
     const barEl     = document.getElementById("greetBar");
 
     emojiEl.textContent = emoji;
-    msgEl.textContent   = msg;
+    msgEl.textContent   = greetMsg;
     dateEl.textContent  = dateStr;
+    subEl.textContent   = "";
     if(special && special.sub){
       specialEl.textContent = special.sub;
       specialEl.style.display = "";
@@ -356,15 +402,23 @@
 
     barEl.style.setProperty("--bar-dur", (SPLASH_MS / 1000) + "s");
 
-    setTimeout(() => {
-      splash.classList.add("hide");
-      splash.addEventListener("animationend", () => splash.remove(), { once: true });
-    }, SPLASH_MS);
+    // ✅ Phase 2: fade เปลี่ยนข้อความหลัง 2.5 วิ
+    const phase2Timer = setTimeout(() => {
+      subEl.style.opacity = "0";
+      setTimeout(() => {
+        subEl.textContent = "⏳ กำลังเตรียมข้อมูล...";
+        subEl.style.opacity = "1";
+      }, 600);
+    }, PHASE2_MS);
 
-    splash.addEventListener("click", () => {
+    function closeSplash(){
+      clearTimeout(phase2Timer);
       splash.classList.add("hide");
       splash.addEventListener("animationend", () => splash.remove(), { once: true });
-    });
+    }
+
+    setTimeout(closeSplash, SPLASH_MS);
+    splash.addEventListener("click", closeSplash);
   })();
 
   // ===== WEEK HEADER =====
@@ -413,7 +467,7 @@
     const logDate = getTodayISO();
     if(prefetchCache && prefetchCache.date === logDate) return prefetchCache;
     setDot("loading");
-    try {
+    try{
       const q   = new URLSearchParams({ logDate });
       const res = await fetch(`/api/prefetchToday?${q}`);
       const out = await res.json().catch(()=>({}));
@@ -425,14 +479,50 @@
         setDot("error");
         return null;
       }
-    } catch(e) {
+    }catch(e){
       setDot("error");
       return null;
     }
   }
 
-  // ✅ เริ่ม prefetch ทันทีตอนโหลดหน้า
   prefetchPromise = prefetchToday();
+
+  // ===== SESSION DROPDOWN — ✅ ข้อ 1: แสดงสถานะในตัวเลือก =====
+  const sessionSel = document.getElementById("sessionSel");
+
+  const SESSION_KEYS = [
+    { key:"s1", label:"ครั้งที่ 1 / ตื่นนอน-เช้า" },
+    { key:"s2", label:"ครั้งที่ 2 / ระหว่างวัน"   },
+    { key:"s3", label:"ครั้งที่ 3 / ก่อนนอน-ค่ำ"  },
+  ];
+
+  function updateSessionDropdown(sessionData){
+    // เก็บค่าที่เลือกอยู่ไว้
+    const prev = sessionSel.value;
+    sessionSel.innerHTML = `<option value="">— เลือกช่วง —</option>`;
+    SESSION_KEYS.forEach(({ key, label }) => {
+      const st   = sessionData?.[key] || {};
+      const done = st.mark === "✅" || st.done === true;
+      const opt  = document.createElement("option");
+      opt.value       = label;
+      opt.textContent = done ? `${label}  ✅` : `${label}  ⏳`;
+      opt.disabled    = done; // ทำแล้ว → เลือกไม่ได้
+      sessionSel.appendChild(opt);
+    });
+    // คืนค่าที่เลือกไว้ถ้ายังเลือกได้
+    if(prev){
+      const match = [...sessionSel.options].find(o => o.value === prev && !o.disabled);
+      if(match) sessionSel.value = prev;
+    }
+  }
+
+  function resetSessionDropdown(){
+    sessionSel.innerHTML = `
+      <option value="">— เลือกช่วง —</option>
+      <option value="ครั้งที่ 1 / ตื่นนอน-เช้า">ครั้งที่ 1 / ตื่นนอน-เช้า</option>
+      <option value="ครั้งที่ 2 / ระหว่างวัน">ครั้งที่ 2 / ระหว่างวัน</option>
+      <option value="ครั้งที่ 3 / ก่อนนอน-ค่ำ">ครั้งที่ 3 / ก่อนนอน-ค่ำ</option>`;
+  }
 
   // ===== STATUS BAR =====
   const statusBar   = document.getElementById("statusBar");
@@ -440,6 +530,7 @@
   const nameSel     = document.getElementById("nameSel");
   let fallbackAbort = null;
   let fallbackCache = {};
+  let allDoneTimer  = null;
 
   function isDone(st){ return st?.mark==="✅" || st?.done===true; }
 
@@ -455,6 +546,7 @@
   function showStatusResult(data){
     const s1=data.sessions?.s1||{}, s2=data.sessions?.s2||{}, s3=data.sessions?.s3||{};
     const doneCount=data.doneCount??[s1,s2,s3].filter(isDone).length;
+
     function box(title,st){
       const ok=isDone(st), cls=ok?"ok":"bad";
       const icon=ok
@@ -467,6 +559,15 @@
     const sumBox=`<div class="sbox"><div class="sbox-title">สรุป</div><div class="sbox-sum-count ${sumCls}">${doneCount}/3</div><div class="sbox-sum-label">${doneCount===3?"ครบแล้ว!":doneCount===0?"ยังไม่มี":"กำลังดี"}</div></div>`;
     statusBoxes.innerHTML=box("ครั้งที่ 1",s1)+box("ครั้งที่ 2",s2)+box("ครั้งที่ 3",s3)+sumBox;
     statusBar.classList.add("visible");
+
+    // ✅ ข้อ 1: อัปเดต session dropdown
+    updateSessionDropdown(data.sessions);
+
+    // ✅ ข้อ 2: ครบแล้ว → แสดง allDone popup หลัง 3 วิ
+    clearTimeout(allDoneTimer);
+    if(doneCount === 3){
+      allDoneTimer = setTimeout(showAllDonePopup, 3000);
+    }
   }
 
   function showStatusError(){
@@ -477,6 +578,8 @@
   function hideStatus(){
     statusBar.classList.remove("visible");
     statusBoxes.innerHTML="";
+    clearTimeout(allDoneTimer);
+    resetSessionDropdown();
   }
 
   async function fetchStatusFallback(name, logDate){
@@ -494,17 +597,13 @@
     }catch(e){ if(e.name==="AbortError")return; showStatusError(); }
   }
 
-  // ✅ แก้ใหม่ — shimmer ทันที + timeout 2 วิ
   nameSel.addEventListener("change", async () => {
     const name = (nameSel.value || "").trim();
     if (!name) { hideStatus(); return; }
 
     const logDate = getTodayISO();
-
-    // แสดง shimmer ทันทีก่อนเลย ไม่รอ
     showStatusLoading();
 
-    // ถ้า prefetch พร้อมแล้ว → ใช้เลยทันที
     if (prefetchCache && prefetchCache.date === logDate) {
       const personData = prefetchCache.data[name];
       showStatusResult(personData || {
@@ -514,7 +613,6 @@
       return;
     }
 
-    // รอ prefetch แบบมี timeout 2 วิ
     const timeout = new Promise(r => setTimeout(() => r(null), 2000));
     const pc = await Promise.race([prefetchPromise, timeout]);
 
@@ -527,8 +625,24 @@
       return;
     }
 
-    // timeout เกิน 2 วิ → fallback checkStatus
     fetchStatusFallback(name, logDate);
+  });
+
+  // ===== ALL DONE POPUP =====
+  const allDoneOverlay = document.getElementById("allDoneOverlay");
+  const allDoneCloseBtn = document.getElementById("allDoneCloseBtn");
+
+  function showAllDonePopup(){
+    allDoneOverlay.classList.add("is-open");
+    allDoneOverlay.setAttribute("aria-hidden","false");
+  }
+  function hideAllDonePopup(){
+    allDoneOverlay.classList.remove("is-open");
+    allDoneOverlay.setAttribute("aria-hidden","true");
+  }
+  allDoneCloseBtn.addEventListener("click", () => {
+    hideAllDonePopup();
+    location.reload();
   });
 
   // ===== SUCCESS POPUP =====
@@ -574,7 +688,8 @@
         msg.className="msg ok";
         msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
         window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
-        // ✅ ล้าง cache แล้ว prefetch ใหม่ทันที
+        // ✅ ข้อ 3: set flag กัน splash ซ้ำ ก่อน reload
+        sessionStorage.setItem(SKIP_GREET_KEY, "1");
         prefetchCache=null;
         prefetchPromise=prefetchToday();
         const selName=(nameSel.value||"").trim();
@@ -582,7 +697,7 @@
         form.reset();
         buildLogDateOptions();
         hideStatus();
-        setTimeout(()=>location.reload(),window.__REFRESH_AFTER_MS__||4500);
+        setTimeout(()=>location.reload(), window.__REFRESH_AFTER_MS__||4500);
       } else {
         msg.className="msg bad";
         msg.textContent="บันทึกไม่สำเร็จ ❌ "+(out.error||"unknown_error");
