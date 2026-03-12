@@ -460,7 +460,6 @@
 
   function setDot(state){ dot.className=""; dot.classList.add(state); }
 
-  // bustCache=true ใช้หลัง submit เพื่อดึงข้อมูลสด ข้าม Cloudflare cache [web:145][web:154]
   async function prefetchToday(bustCache = false){
     const logDate = getTodayISO();
     if(!bustCache && prefetchCache && prefetchCache.date === logDate) return prefetchCache;
@@ -636,8 +635,8 @@
     allDoneOverlay.setAttribute("aria-hidden","true");
   }
   allDoneCloseBtn.addEventListener("click", () => {
+    // แค่ปิด popup ไม่ reload, ไม่ welcome ซ้ำ
     hideAllDonePopup();
-    location.reload();
   });
 
   // ===== SUCCESS POPUP =====
