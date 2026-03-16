@@ -1,7 +1,7 @@
 // ===============================
 // Code.gs (HARDENED + OPTIMIZED + KEEP-ALIVE + PREFETCH)
 // UpdatedAt: 2026-03-17 (+07:00)
-// Version: 2.2
+// Version: 2.2.1
 // Notes:
 // - Use Script Properties for SECRET / SHEET names when possible
 // - Prevent duplicate rows by (Name + LogDate + Session)
@@ -13,7 +13,8 @@
 // - keepAlive_: ping every 5 min via Time-based Trigger (prevents Cold Start)
 // - hasDuplicateSubmission_: scan 125 rows ท้ายสุด (ไม่อ่านทั้ง Sheet)
 // - buildStatusFor_: ใช้ buildStatusForFast_ แทน buildDoneMapFromResponses_
-// - v2.2: readPeople_ cache ด้วย CacheService (10 นาที) ลด Sheets API call
+// - v2.2: readPeople_ cache ด้วย CacheService ลด Sheets API call
+// - v2.2.1: เพิ่ม cache TTL เป็น 6 ชั่วโมง (21600 วินาที) = สูงสุดที่ GAS CacheService รองรับ
 // ===============================
 
 // ====== CONFIG (fallback defaults) ======
@@ -416,12 +417,14 @@ function mustSheet_(ss, name) {
   return sh;
 }
 
-// ====== HELPERS: People (v2.2 — CacheService) ======
-// ✅ cache รายชื่อ 10 นาที ลด Sheets API call ทุก request
+// ====== HELPERS: People (v2.2.1 — CacheService 6h) ======
+// ✅ cache รายชื่อ 6 ชั่วโมง (21600 วิ = สูงสุดที่ GAS รองรับ) ลด Sheets API call ทุก request
+const PEOPLE_CACHE_TTL = 21600; // 6 ชั่วโมง ในหน่วยวินาที (สูงสุดที่ GAS CacheService รองรับ)
+
 function readPeople_(ss) {
-  const cache     = CacheService.getScriptCache();
-  const cacheKey  = "people_list";
-  const cached    = cache.get(cacheKey);
+  const cache    = CacheService.getScriptCache();
+  const cacheKey = "people_list";
+  const cached   = cache.get(cacheKey);
   if (cached) {
     try { return JSON.parse(cached); } catch (_) {}
   }
@@ -439,7 +442,7 @@ function readPeople_(ss) {
 
   const result = Array.from(new Set(vals));
 
-  try { cache.put(cacheKey, JSON.stringify(result), 600); } catch (_) {}
+  try { cache.put(cacheKey, JSON.stringify(result), PEOPLE_CACHE_TTL); } catch (_) {}
 
   return result;
 }
