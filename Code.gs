@@ -1,7 +1,7 @@
 // ===============================
 // Code.gs (HARDENED + OPTIMIZED + KEEP-ALIVE + PREFETCH)
 // UpdatedAt: 2026-03-17 (+07:00)
-// Version: 2.5
+// Version: 2.2
 // Notes:
 // - Use Script Properties for SECRET / SHEET names when possible
 // - Prevent duplicate rows by (Name + LogDate + Session)
@@ -11,8 +11,9 @@
 // - checkStatus: fast scan (125 rows) instead of full sheet Map
 // - getAllStatus: scan แค่ 125 rows ท้ายสุด (41 คน × 3 ครั้ง = 123)
 // - keepAlive_: ping every 5 min via Time-based Trigger (prevents Cold Start)
-// - v2.5: hasDuplicateSubmission_ scan 125 rows ท้ายสุด (ไม่อ่านทั้ง Sheet)
-// - v2.5: buildStatusFor_ ใช้ buildStatusForFast_ แทน buildDoneMapFromResponses_
+// - hasDuplicateSubmission_: scan 125 rows ท้ายสุด (ไม่อ่านทั้ง Sheet)
+// - buildStatusFor_: ใช้ buildStatusForFast_ แทน buildDoneMapFromResponses_
+// - v2.2: readPeople_ cache ด้วย CacheService (10 นาที) ลด Sheets API call
 // ===============================
 
 // ====== CONFIG (fallback defaults) ======
@@ -415,7 +416,16 @@ function mustSheet_(ss, name) {
   return sh;
 }
 
+// ====== HELPERS: People (v2.2 — CacheService) ======
+// ✅ cache รายชื่อ 10 นาที ลด Sheets API call ทุก request
 function readPeople_(ss) {
+  const cache     = CacheService.getScriptCache();
+  const cacheKey  = "people_list";
+  const cached    = cache.get(cacheKey);
+  if (cached) {
+    try { return JSON.parse(cached); } catch (_) {}
+  }
+
   const cfg     = getConfig_();
   const sh      = ss.getSheetByName(cfg.PEOPLE_SHEET);
   if (!sh) return [];
@@ -427,7 +437,11 @@ function readPeople_(ss) {
 
   if (vals.length && /^name$/i.test(vals[0])) vals.shift();
 
-  return Array.from(new Set(vals));
+  const result = Array.from(new Set(vals));
+
+  try { cache.put(cacheKey, JSON.stringify(result), 600); } catch (_) {}
+
+  return result;
 }
 
 // ====== HELPERS: Validation ======
@@ -479,7 +493,7 @@ function toISODateServer_(d) {
   return Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd");
 }
 
-// ====== DUPLICATE CHECK (OPTIMIZED v2.5) ======
+// ====== DUPLICATE CHECK (OPTIMIZED) ======
 // ✅ scan แค่ 125 rows ท้ายสุด แทน getDataRange() ทั้ง Sheet
 function hasDuplicateSubmission_(sh, name, logDateS, session) {
   const lastRow = sh.getLastRow();
@@ -517,7 +531,7 @@ function hasDuplicateSubmission_(sh, name, logDateS, session) {
   return { ok: true, duplicate: false };
 }
 
-// ====== BUILD STATUS (OPTIMIZED v2.5) ======
+// ====== BUILD STATUS (OPTIMIZED) ======
 // ✅ ใช้ buildStatusForFast_ แทน buildDoneMapFromResponses_ (ไม่อ่าน Sheet ทั้งหมด)
 function buildStatusFor_(responsesSheet, name, logDateS) {
   const fast = buildStatusForFast_(responsesSheet, name, logDateS);
