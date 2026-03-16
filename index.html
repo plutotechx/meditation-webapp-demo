@@ -558,9 +558,10 @@
 
     updateSessionDropdown(data.sessions);
 
+    // v2.3: ลด delay All Done Popup จาก 3000 → 1000ms
     clearTimeout(allDoneTimer);
     if(doneCount === 3){
-      allDoneTimer = setTimeout(showAllDonePopup, 3000);
+      allDoneTimer = setTimeout(showAllDonePopup, 1000);
     }
   }
 
@@ -635,7 +636,6 @@
     allDoneOverlay.setAttribute("aria-hidden","true");
   }
   allDoneCloseBtn.addEventListener("click", () => {
-    // แค่ปิด popup ไม่ reload, ไม่ welcome ซ้ำ
     hideAllDonePopup();
   });
 
@@ -644,7 +644,8 @@
     const overlay=document.getElementById("successOverlay");
     const textEl=document.getElementById("successText");
     let autoTimer=null;
-    const POPUP_MS=2500, REFRESH_AFTER_MS=4500;
+    // v2.3: ลด REFRESH_AFTER_MS จาก 4500 → 3000ms (popup อยู่ครบ 2500ms แล้วยังมีเวลาว่าง 500ms ก่อน reload)
+    const POPUP_MS=2500, REFRESH_AFTER_MS=3000;
     window.showSuccessPopup=function(message="บันทึกข้อมูลเรียบร้อย",ms=POPUP_MS){
       textEl.textContent=message;
       overlay.classList.add("is-open");
@@ -683,14 +684,18 @@
         msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
         window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
         sessionStorage.setItem(SKIP_GREET_KEY, "1");
-        prefetchCache=null;
-        prefetchPromise=prefetchToday(true);
+        // v2.3: patch prefetchCache เฉพาะคนที่ submit แทนการล้างทิ้ง
+        // ทำให้กดชื่อซ้ำหลัง submit เห็นสถานะล่าสุดทันที ไม่ต้องรอ prefetch ใหม่
         const selName=(nameSel.value||"").trim();
+        if(prefetchCache && out.status && selName){
+          prefetchCache.data[selName] = out.status;
+        }
+        prefetchPromise=prefetchToday(true);
         delete fallbackCache[selName+"|"+getTodayISO()];
         form.reset();
         buildLogDateOptions();
         hideStatus();
-        setTimeout(()=>location.reload(), window.__REFRESH_AFTER_MS__||4500);
+        setTimeout(()=>location.reload(), window.__REFRESH_AFTER_MS__||3000);
       } else {
         msg.className="msg bad";
         msg.textContent="บันทึกไม่สำเร็จ ❌ "+(out.error||"unknown_error");
