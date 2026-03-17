@@ -223,7 +223,7 @@
           <option>ณัฐพล (ท๊อด)</option>
           <option>กิตติพงษ์ (พี)</option>
           <option>ธนพร (พร)</option>
-          <option>รายาวดี (เฟริน)</option>
+          <option>รายาวดี (เฝริน)</option>
           <option>บัญญัติ (บอย)</option>
           <option>ธีรพล (ต้อม)</option>
           <option>นริศ (เอ็กซ์)</option>
@@ -698,8 +698,9 @@
         const savedName = (nameSel.value || "").trim();
         const savedStatus = out.status || null;
 
-        // อัปเดต prefetchCache ทันที
-        if(prefetchCache && savedStatus && savedName){
+        // อัปเดต prefetchCache ด้วย status ล่าสุดจาก server ทันที (ไม่ยิง API ใหม่)
+        if(savedStatus && savedName){
+          if(!prefetchCache) prefetchCache = { date: getTodayISO(), data: {} };
           prefetchCache.data[savedName] = savedStatus;
         }
         delete fallbackCache[savedName + "|" + getTodayISO()];
@@ -708,20 +709,19 @@
         form.reset();
         buildLogDateOptions();
 
-        // v2.6: re-select ชื่อเดิม + แสดง status จาก server response ทันที (ไม่ต้อง reload)
+        // v2.7: re-select ชื่อเดิม + แสดง status จาก server response ทันที, dot คงเขียว
         if(savedName && savedStatus){
           nameSel.value = savedName;
           showStatusResult(savedStatus);
+          setDot("ready"); // dot คงเขียวไว้ ไม่ต้องยิง API ใหม่
         } else if(savedName && prefetchCache && prefetchCache.date === getTodayISO()){
           nameSel.value = savedName;
           showStatusResult(prefetchCache.data[savedName] || {
             doneCount: 0,
             sessions: { s1:{mark:"—",time:""}, s2:{mark:"—",time:""}, s3:{mark:"—",time:""} }
           });
+          setDot("ready");
         }
-
-        // background prefetch ใหม่เงียบๆ (ไม่รอ)
-        prefetchToday(true).then(pc => { if(pc) prefetchCache = pc; });
 
       } else {
         msg.className="msg bad";
