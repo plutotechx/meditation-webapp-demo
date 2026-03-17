@@ -308,9 +308,9 @@
   <!-- All Done Popup -->
   <div id="allDoneOverlay" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="alldone-card">
-      <div class="alldone-emoji">🧘</div>
-      <p class="alldone-title">วันนี้คุณทำสมาธิครบแล้ว!</p>
-      <p class="alldone-sub">ทำสมาธิครบ 3 ครั้งในวันนี้แล้ว<br>ขอบคุณที่ดูแลตัวเองทุกวัน 🙏</p>
+      <div class="alldone-emoji" id="allDoneEmoji">🧘</div>
+      <p class="alldone-title" id="allDoneTitle">วันนี้คุณทำสมาธิครบแล้ว!</p>
+      <p class="alldone-sub"   id="allDoneSub">ทำสมาธิครบ 3 ครั้งในวันนี้แล้ว<br>ขอบคุณที่ดูแลตัวเองทุกวัน 🙏</p>
       <button class="alldone-btn" id="allDoneCloseBtn">รับทราบ</button>
     </div>
   </div>
@@ -636,10 +636,53 @@
   });
 
   // ===== ALL DONE POPUP =====
-  const allDoneOverlay = document.getElementById("allDoneOverlay");
-  const allDoneCloseBtn = document.getElementById("allDoneCloseBtn");
+  const allDoneOverlay   = document.getElementById("allDoneOverlay");
+  const allDoneCloseBtn  = document.getElementById("allDoneCloseBtn");
+  const allDoneEmojiEl   = document.getElementById("allDoneEmoji");
+  const allDoneTitleEl   = document.getElementById("allDoneTitle");
+  const allDoneSubEl     = document.getElementById("allDoneSub");
+
+  // ===== MSG_POOL: หมุนตามวันที่ (1-31) =====
+  const ALL_DONE_MSG_POOL = [
+    { emoji:"🧘", title:"วันนี้ทำสมาธิครบแล้ว!",        sub:"จิตใจสงบ พร้อมรับทุกสิ่ง 🙏" },
+    { emoji:"🌟", title:"ยอดเยี่ยมมาก!",                sub:"ความสม่ำเสมอคือกุญแจแห่งความสำเร็จ" },
+    { emoji:"🌊", title:"ครบ 3 ครั้งแล้ว!",             sub:"เหมือนคลื่นที่ไหลสม่ำเสมอ ไม่หยุด" },
+    { emoji:"🌸", title:"วันนี้สวยงามมาก!",             sub:"ดูแลจิตใจทุกวัน ชีวิตจะดีขึ้นเอง" },
+    { emoji:"🔥", title:"ไฟยังลุกโชนอยู่!",             sub:"ทำได้ครบอีกวัน พลังไม่มีวันหมด" },
+    { emoji:"🌿", title:"สงบ นิ่ง ครบ!",               sub:"ธรรมชาติสอนให้เราอยู่กับปัจจุบัน" },
+    { emoji:"💫", title:"7 วันแล้วที่ไม่ยอมแพ้!",       sub:"ทุกก้าวเล็กๆ นำไปสู่การเปลี่ยนแปลงใหญ่" },
+    { emoji:"🎯", title:"โฟกัสดีมากวันนี้!",            sub:"เป้าหมายชัด จิตใจสงบ ทุกอย่างเป็นไปได้" },
+    { emoji:"🌅", title:"เช้า กลางวัน เย็น ครบ!",       sub:"สามช่วงเวลา หนึ่งวันที่สมบูรณ์แบบ" },
+    { emoji:"💎", title:"วันนี้มีค่ามาก!",              sub:"เวลาที่ลงทุนกับตัวเองไม่เคยสูญเปล่า" },
+    { emoji:"🦋", title:"เปลี่ยนแปลงทีละวัน!",          sub:"ผีเสื้อไม่รู้ตัวว่ากำลังเปลี่ยน แต่มันสวยงาม" },
+    { emoji:"🌙", title:"จบวันด้วยความสงบ!",            sub:"คืนนี้หลับสบาย ตื่นมาสดชื่น 🙏" },
+    { emoji:"⚡", title:"พลังงานดีมากวันนี้!",           sub:"ทำสมาธิครบ ชาร์จพลังงานเต็ม 100%" },
+    { emoji:"🌈", title:"หลากสีแห่งชีวิต!",             sub:"ทุกวันมีความหมาย วันนี้ก็เช่นกัน" },
+    { emoji:"🏆", title:"แชมป์แห่งวันนี้!",             sub:"ไม่มีใครทำแทนได้ นอกจากตัวคุณเอง 🙏" },
+    { emoji:"🌻", title:"ดอกไม้บานทุกวัน!",             sub:"จิตใจที่ได้รับการดูแลย่อมเบ่งบาน" },
+    { emoji:"🕊️", title:"สงบเหมือนนกพิราบ!",           sub:"ความสงบในใจ คือสันติภาพที่แท้จริง" },
+    { emoji:"🎋", title:"แข็งแกร่งเหมือนไม้ไผ่!",       sub:"โค้งงอได้ แต่ไม่เคยหัก 🙏" },
+    { emoji:"🌍", title:"ดูแลโลกภายใน!",               sub:"เมื่อข้างในสงบ ข้างนอกก็ดีตาม" },
+    { emoji:"🎵", title:"จังหวะชีวิตสม่ำเสมอ!",         sub:"เหมือนเพลงที่ไพเราะ ต้องฝึกทุกวัน" },
+    { emoji:"🌠", title:"21 วัน สร้างนิสัยได้แล้ว!",    sub:"วิทยาศาสตร์บอกว่า 21 วันสร้างนิสัย คุณทำได้!" },
+    { emoji:"🍃", title:"เบาสบายเหมือนใบไม้!",          sub:"ปล่อยวางสิ่งที่หนัก เก็บแต่สิ่งที่ดี" },
+    { emoji:"🌺", title:"งดงามจากภายใน!",               sub:"ความงามที่แท้จริงมาจากจิตใจที่สงบ" },
+    { emoji:"🎑", title:"ใจเย็น ครบถ้วน สมบูรณ์!",      sub:"วันที่ผ่านไปอย่างมีคุณค่า" },
+    { emoji:"🔮", title:"เห็นชัดด้วยจิตที่นิ่ง!",        sub:"จิตสงบเหมือนน้ำนิ่ง สะท้อนความจริงได้ชัดเจน" },
+    { emoji:"🌾", title:"เพาะเมล็ดพันธุ์ดีทุกวัน!",      sub:"สิ่งที่ปลูกวันนี้ จะเก็บเกี่ยวในวันหน้า" },
+    { emoji:"🏔️", title:"สูงขึ้นทีละก้าว!",             sub:"ภูเขาสูงแค่ไหน ก็ไปถึงได้ด้วยก้าวที่สม่ำเสมอ" },
+    { emoji:"🌝", title:"เกือบจบเดือนแล้ว!",            sub:"ทำมาได้ขนาดนี้ อีกนิดก็ครบเดือน 🙏" },
+    { emoji:"🎊", title:"ใกล้จบเดือนแล้ว!",             sub:"ความพยายามใกล้จะผลิดอกออกผล" },
+    { emoji:"👑", title:"ครบ 30 วันแล้ว!",              sub:"คุณทำสำเร็จแล้ว! นี่คือตัวคุณในเวอร์ชันที่ดีที่สุด 🎉" },
+    { emoji:"🌞", title:"ครบ 31 วันเต็มเดือน!",          sub:"เดือนนี้ไม่มีวันที่พลาดเลย นี่คือความภาคภูมิใจที่แท้จริง 🏅" },
+  ];
 
   function showAllDonePopup(){
+    const day = new Date().getDate(); // 1–31
+    const m   = ALL_DONE_MSG_POOL[(day - 1) % ALL_DONE_MSG_POOL.length];
+    allDoneEmojiEl.textContent = m.emoji;
+    allDoneTitleEl.textContent = m.title;
+    allDoneSubEl.innerHTML     = m.sub;
     allDoneOverlay.classList.add("is-open");
     allDoneOverlay.setAttribute("aria-hidden","false");
   }
