@@ -558,7 +558,6 @@
 
     updateSessionDropdown(data.sessions);
 
-    // v2.3: ลด delay All Done Popup จาก 3000 → 1000ms
     clearTimeout(allDoneTimer);
     if(doneCount === 3){
       allDoneTimer = setTimeout(showAllDonePopup, 1000);
@@ -644,7 +643,6 @@
     const overlay=document.getElementById("successOverlay");
     const textEl=document.getElementById("successText");
     let autoTimer=null;
-    // v2.3: ลด REFRESH_AFTER_MS จาก 4500 → 3000ms (popup อยู่ครบ 2500ms แล้วยังมีเวลาว่าง 500ms ก่อน reload)
     const POPUP_MS=2500, REFRESH_AFTER_MS=3000;
     window.showSuccessPopup=function(message="บันทึกข้อมูลเรียบร้อย",ms=POPUP_MS){
       textEl.textContent=message;
@@ -684,17 +682,32 @@
         msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
         window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
         sessionStorage.setItem(SKIP_GREET_KEY, "1");
-        // v2.3: patch prefetchCache เฉพาะคนที่ submit แทนการล้างทิ้ง
-        // ทำให้กดชื่อซ้ำหลัง submit เห็นสถานะล่าสุดทันที ไม่ต้องรอ prefetch ใหม่
-        const selName=(nameSel.value||"").trim();
-        if(prefetchCache && out.status && selName){
-          prefetchCache.data[selName] = out.status;
+
+        // v2.4B: จำชื่อไว้ก่อน reset
+        const savedName = (nameSel.value || "").trim();
+
+        // patch prefetchCache เฉพาะคนที่ submit
+        if(prefetchCache && out.status && savedName){
+          prefetchCache.data[savedName] = out.status;
         }
-        prefetchPromise=prefetchToday(true);
-        delete fallbackCache[selName+"|"+getTodayISO()];
+        prefetchPromise = prefetchToday(true);
+        delete fallbackCache[savedName + "|" + getTodayISO()];
+
         form.reset();
         buildLogDateOptions();
-        hideStatus();
+
+        // v2.4B: re-select ชื่อเดิม + แสดง status ใหม่จาก cache ทันที
+        if(savedName && prefetchCache && prefetchCache.date === getTodayISO()){
+          nameSel.value = savedName;
+          const personData = prefetchCache.data[savedName];
+          showStatusResult(personData || {
+            doneCount: 0,
+            sessions: { s1:{mark:"—",time:""}, s2:{mark:"—",time:""}, s3:{mark:"—",time:""} }
+          });
+        } else {
+          hideStatus();
+        }
+
         setTimeout(()=>location.reload(), window.__REFRESH_AFTER_MS__||3000);
       } else {
         msg.className="msg bad";
