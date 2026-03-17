@@ -483,7 +483,7 @@
     }
   }
 
-  // v2.5: เมื่อ prefetch เสร็จ → ถ้ามีชื่อเลือกอยู่แล้ว อัปเดต status อัตโนมัติ
+  // เมื่อ prefetch เสร็จ → ถ้ามีชื่อเลือกอยู่แล้ว อัปเดต status อัตโนมัติ
   prefetchPromise = prefetchToday().then(pc => {
     if(pc && nameSel.value){
       const name = nameSel.value.trim();
@@ -611,7 +611,6 @@
     const logDate = getTodayISO();
     showStatusLoading();
 
-    // ถ้า prefetchCache พร้อมแล้ว → ใช้ทันที
     if (prefetchCache && prefetchCache.date === logDate) {
       const personData = prefetchCache.data[name];
       showStatusResult(personData || {
@@ -621,7 +620,6 @@
       return;
     }
 
-    // v2.5: เพิ่ม timeout เป็น 5000ms (จาก 2000ms)
     const timeout = new Promise(r => setTimeout(() => r(null), 5000));
     const pc = await Promise.race([prefetchPromise, timeout]);
 
@@ -658,7 +656,7 @@
     const overlay=document.getElementById("successOverlay");
     const textEl=document.getElementById("successText");
     let autoTimer=null;
-    const POPUP_MS=2500, REFRESH_AFTER_MS=3000;
+    const POPUP_MS=2500;
     window.showSuccessPopup=function(message="บันทึกข้อมูลเรียบร้อย",ms=POPUP_MS){
       textEl.textContent=message;
       overlay.classList.add("is-open");
@@ -672,7 +670,6 @@
     };
     document.addEventListener("keydown",(e)=>{if(e.key==="Escape")window.hideSuccessPopup();});
     window.__POPUP_MS__=POPUP_MS;
-    window.__REFRESH_AFTER_MS__=REFRESH_AFTER_MS;
   })();
 
   // ===== SUBMIT =====
@@ -696,41 +693,36 @@
         msg.className="msg ok";
         msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
         window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
-        sessionStorage.setItem(SKIP_GREET_KEY, "1");
 
-        // v2.4B: จำชื่อไว้ก่อน reset
+        // จำชื่อและ status จาก server response
         const savedName = (nameSel.value || "").trim();
+        const savedStatus = out.status || null;
 
-        // patch prefetchCache เฉพาะคนที่ submit
-        if(prefetchCache && out.status && savedName){
-          prefetchCache.data[savedName] = out.status;
+        // อัปเดต prefetchCache ทันที
+        if(prefetchCache && savedStatus && savedName){
+          prefetchCache.data[savedName] = savedStatus;
         }
-        // v2.5: prefetch ใหม่ + auto-update ถ้ามีชื่อ
-        prefetchPromise = prefetchToday(true).then(pc => {
-          if(pc && nameSel.value){
-            const n = nameSel.value.trim();
-            if(n) showStatusResult(pc.data[n] || { doneCount:0, sessions:{s1:{mark:"—",time:""},s2:{mark:"—",time:""},s3:{mark:"—",time:""}} });
-          }
-          return pc;
-        });
         delete fallbackCache[savedName + "|" + getTodayISO()];
 
+        // reset form
         form.reset();
         buildLogDateOptions();
 
-        // v2.4B: re-select ชื่อเดิม + แสดง status ใหม่จาก cache ทันที
-        if(savedName && prefetchCache && prefetchCache.date === getTodayISO()){
+        // v2.6: re-select ชื่อเดิม + แสดง status จาก server response ทันที (ไม่ต้อง reload)
+        if(savedName && savedStatus){
           nameSel.value = savedName;
-          const personData = prefetchCache.data[savedName];
-          showStatusResult(personData || {
+          showStatusResult(savedStatus);
+        } else if(savedName && prefetchCache && prefetchCache.date === getTodayISO()){
+          nameSel.value = savedName;
+          showStatusResult(prefetchCache.data[savedName] || {
             doneCount: 0,
             sessions: { s1:{mark:"—",time:""}, s2:{mark:"—",time:""}, s3:{mark:"—",time:""} }
           });
-        } else {
-          hideStatus();
         }
 
-        setTimeout(()=>location.reload(), window.__REFRESH_AFTER_MS__||3000);
+        // background prefetch ใหม่เงียบๆ (ไม่รอ)
+        prefetchToday(true).then(pc => { if(pc) prefetchCache = pc; });
+
       } else {
         msg.className="msg bad";
         msg.textContent="บันทึกไม่สำเร็จ ❌ "+(out.error||"unknown_error");
