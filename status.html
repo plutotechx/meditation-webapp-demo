@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Status - Daily Meditation</title>
-  <!-- UpdatedAt: 2026-03-10 23:30 (+07:00) | Change: hardcode names, remove /api/names -->
+  <!-- UpdatedAt: 2026-03-17 11:36 (+07:00) | Change: add _bust param to bypass Cloudflare cache -->
 
   <style>
     :root{
@@ -278,7 +278,6 @@
   const updatedCorner = document.getElementById("updatedCorner");
   const updatedFooterText = document.getElementById("updatedFooterText");
 
-  /* รายชื่อ hardcode จาก index.html */
   const NAMES = [
     "สุรเชษฐ์ (ตั้ม)", "บัญญัติ (แดง)", "รัชเศรษฐ์ (ยศ)",
     "ชนุดม (ดอน)", "ทรงชัย (ทรง)", "สุรุ่งรัตน์ (เก่ง)",
@@ -442,7 +441,6 @@
     if (isLoading) { out.className = "msg"; out.textContent = msg || "กำลังตรวจสอบ..."; }
   }
 
-  /* โลดรายชื่อจาก hardcode ไม่ต้องเรียก API */
   function loadNames(){
     nameSel.innerHTML =
       `<option value="">— เลือกชื่อ —</option>` +
@@ -460,6 +458,7 @@
     setLoading(true, "กำลังตรวจสอบ...");
     try {
       const q = new URLSearchParams({ name, logDate });
+      q.set("_bust", Date.now()); // ✅ bypass Cloudflare cache ทุกครั้งที่กดตรวจสอบ
       const res = await fetch(`/api/checkStatus?${q.toString()}`);
       const data = await res.json().catch(()=>({}));
       if (!res.ok || !data.ok) {
