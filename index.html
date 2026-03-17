@@ -483,7 +483,20 @@
     }
   }
 
-  prefetchPromise = prefetchToday();
+  // v2.5: เมื่อ prefetch เสร็จ → ถ้ามีชื่อเลือกอยู่แล้ว อัปเดต status อัตโนมัติ
+  prefetchPromise = prefetchToday().then(pc => {
+    if(pc && nameSel.value){
+      const name = nameSel.value.trim();
+      if(name){
+        const personData = pc.data[name];
+        showStatusResult(personData || {
+          doneCount: 0,
+          sessions: { s1:{mark:"—",time:""}, s2:{mark:"—",time:""}, s3:{mark:"—",time:""} }
+        });
+      }
+    }
+    return pc;
+  });
 
   // ===== SESSION DROPDOWN =====
   const sessionSel = document.getElementById("sessionSel");
@@ -598,6 +611,7 @@
     const logDate = getTodayISO();
     showStatusLoading();
 
+    // ถ้า prefetchCache พร้อมแล้ว → ใช้ทันที
     if (prefetchCache && prefetchCache.date === logDate) {
       const personData = prefetchCache.data[name];
       showStatusResult(personData || {
@@ -607,7 +621,8 @@
       return;
     }
 
-    const timeout = new Promise(r => setTimeout(() => r(null), 2000));
+    // v2.5: เพิ่ม timeout เป็น 5000ms (จาก 2000ms)
+    const timeout = new Promise(r => setTimeout(() => r(null), 5000));
     const pc = await Promise.race([prefetchPromise, timeout]);
 
     if (pc && pc.data && pc.date === logDate) {
@@ -690,7 +705,14 @@
         if(prefetchCache && out.status && savedName){
           prefetchCache.data[savedName] = out.status;
         }
-        prefetchPromise = prefetchToday(true);
+        // v2.5: prefetch ใหม่ + auto-update ถ้ามีชื่อ
+        prefetchPromise = prefetchToday(true).then(pc => {
+          if(pc && nameSel.value){
+            const n = nameSel.value.trim();
+            if(n) showStatusResult(pc.data[n] || { doneCount:0, sessions:{s1:{mark:"—",time:""},s2:{mark:"—",time:""},s3:{mark:"—",time:""}} });
+          }
+          return pc;
+        });
         delete fallbackCache[savedName + "|" + getTodayISO()];
 
         form.reset();
