@@ -315,7 +315,7 @@
     </div>
   </div>
 
-<script>
+<script type="module">
   // ===== DATE UTILS =====
   function pad2(n){ return String(n).padStart(2,"0"); }
   function toISODateLocal(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
@@ -476,7 +476,6 @@
     }
   }
 
-  // เมื่อ prefetch เสร็จ → ถ้ามีชื่อเลือกอยู่แล้ว อัปเดต status อัตโนมัติ
   prefetchPromise = prefetchToday().then(pc => {
     if(pc && nameSel.value){
       const name = nameSel.value.trim();
@@ -635,78 +634,57 @@
   const allDoneTitleEl   = document.getElementById("allDoneTitle");
   const allDoneSubEl     = document.getElementById("allDoneSub");
 
-  // ===== MSG_POOL: หมุนตามวันที่ (1-31) =====
-  const ALL_DONE_MSG_POOL = [
-    { emoji:"🧘", title:"วันนี้ทำสมาธิครบแล้ว!",        sub:"จิตใจสงบ พร้อมรับทุกสิ่ง 🙏" },
-    { emoji:"🌟", title:"ยอดเยี่ยมมาก!",                sub:"ความสม่ำเสมอคือกุญแจแห่งความสำเร็จ" },
-    { emoji:"🌊", title:"ครบ 3 ครั้งแล้ว!",             sub:"เหมือนคลื่นที่ไหลสม่ำเสมอ ไม่หยุด" },
-    { emoji:"🌸", title:"วันนี้สวยงามมาก!",             sub:"ดูแลจิตใจทุกวัน ชีวิตจะดีขึ้นเอง" },
-    { emoji:"🔥", title:"ไฟยังลุกโชนอยู่!",             sub:"ทำได้ครบอีกวัน พลังไม่มีวันหมด" },
-    { emoji:"🌿", title:"สงบ นิ่ง ครบ!",               sub:"ธรรมชาติสอนให้เราอยู่กับปัจจุบัน" },
-    { emoji:"💫", title:"7 วันแล้วที่ไม่ยอมแพ้!",       sub:"ทุกก้าวเล็กๆ นำไปสู่การเปลี่ยนแปลงใหญ่" },
-    { emoji:"🎯", title:"โฟกัสดีมากวันนี้!",            sub:"เป้าหมายชัด จิตใจสงบ ทุกอย่างเป็นไปได้" },
-    { emoji:"🌅", title:"เช้า กลางวัน เย็น ครบ!",       sub:"สามช่วงเวลา หนึ่งวันที่สมบูรณ์แบบ" },
-    { emoji:"💎", title:"วันนี้มีค่ามาก!",              sub:"เวลาที่ลงทุนกับตัวเองไม่เคยสูญเปล่า" },
-    { emoji:"🦋", title:"เปลี่ยนแปลงทีละวัน!",          sub:"ผีเสื้อไม่รู้ตัวว่ากำลังเปลี่ยน แต่มันสวยงาม" },
-    { emoji:"🌙", title:"จบวันด้วยความสงบ!",            sub:"คืนนี้หลับสบาย ตื่นมาสดชื่น 🙏" },
-    { emoji:"⚡", title:"พลังงานดีมากวันนี้!",           sub:"ทำสมาธิครบ ชาร์จพลังงานเต็ม 100%" },
-    { emoji:"🌈", title:"หลากสีแห่งชีวิต!",             sub:"ทุกวันมีความหมาย วันนี้ก็เช่นกัน" },
-    { emoji:"🏆", title:"แชมป์แห่งวันนี้!",             sub:"ไม่มีใครทำแทนได้ นอกจากตัวคุณเอง 🙏" },
-    { emoji:"🌻", title:"ดอกไม้บานทุกวัน!",             sub:"จิตใจที่ได้รับการดูแลย่อมเบ่งบาน" },
-    { emoji:"🕊️", title:"สงบเหมือนนกพิราบ!",           sub:"ความสงบในใจ คือสันติภาพที่แท้จริง" },
-    { emoji:"🎋", title:"แข็งแกร่งเหมือนไม้ไผ่!",       sub:"โค้งงอได้ แต่ไม่เคยหัก 🙏" },
-    { emoji:"🌍", title:"ดูแลโลกภายใน!",               sub:"เมื่อข้างในสงบ ข้างนอกก็ดีตาม" },
-    { emoji:"🎵", title:"จังหวะชีวิตสม่ำเสมอ!",         sub:"เหมือนเพลงที่ไพเราะ ต้องฝึกทุกวัน" },
-    { emoji:"🌠", title:"21 วัน สร้างนิสัยได้แล้ว!",    sub:"วิทยาศาสตร์บอกว่า 21 วันสร้างนิสัย คุณทำได้!" },
-    { emoji:"🍃", title:"เบาสบายเหมือนใบไม้!",          sub:"ปล่อยวางสิ่งที่หนัก เก็บแต่สิ่งที่ดี" },
-    { emoji:"🌺", title:"งดงามจากภายใน!",               sub:"ความงามที่แท้จริงมาจากจิตใจที่สงบ" },
-    { emoji:"🎑", title:"ใจเย็น ครบถ้วน สมบูรณ์!",      sub:"วันที่ผ่านไปอย่างมีคุณค่า" },
-    { emoji:"🔮", title:"เห็นชัดด้วยจิตที่นิ่ง!",        sub:"จิตสงบเหมือนน้ำนิ่ง สะท้อนความจริงได้ชัดเจน" },
-    { emoji:"🌾", title:"เพาะเมล็ดพันธุ์ดีทุกวัน!",      sub:"สิ่งที่ปลูกวันนี้ จะเก็บเกี่ยวในวันหน้า" },
-    { emoji:"🏔️", title:"สูงขึ้นทีละก้าว!",             sub:"ภูเขาสูงแค่ไหน ก็ไปถึงได้ด้วยก้าวที่สม่ำเสมอ" },
-    { emoji:"🌝", title:"เกือบจบเดือนแล้ว!",            sub:"ทำมาได้ขนาดนี้ อีกนิดก็ครบเดือน 🙏" },
-    { emoji:"🎊", title:"ใกล้จบเดือนแล้ว!",             sub:"ความพยายามใกล้จะผลิดอกออกผล" },
-    { emoji:"👑", title:"ครบ 30 วันแล้ว!",              sub:"คุณทำสำเร็จแล้ว! นี่คือตัวคุณในเวอร์ชันที่ดีที่สุด 🎉" },
-    { emoji:"🌞", title:"ครบ 31 วันเต็มเดือน!",          sub:"เดือนนี้ไม่มีวันที่พลาดเลย นี่คือความภาคภูมิใจที่แท้จริง 🏅" },
-  ];
+  // fallback กรณีโหลด quotes ไม่ได้
+  const ALLDONE_FALLBACK = { emoji:"🧘", title:"วันนี้ทำสมาธิครบแล้ว!", sub:"จิตใจสงบ พร้อมรับทุกสิ่ง 🙏" };
 
-  function showAllDonePopup(){
-    const day = new Date().getDate(); // 1–31
-    const m   = ALL_DONE_MSG_POOL[(day - 1) % ALL_DONE_MSG_POOL.length];
-    allDoneEmojiEl.textContent = m.emoji;
-    allDoneTitleEl.textContent = m.title;
-    allDoneSubEl.innerHTML     = m.sub;
+  async function showAllDonePopup(){
+    const now    = new Date();
+    const month  = String(now.getMonth() + 1).padStart(2, "0");
+    const day    = now.getDate(); // 1–31
+    let q = ALLDONE_FALLBACK;
+
+    try {
+      const mod    = await import(`./quotes/month-${month}.js`);
+      const quotes = mod.quotes;
+      // วันที่ 1 = index 0, วันที่ 18 = index 17
+      const idx = Math.min(day - 1, quotes.length - 1);
+      q = quotes[idx];
+    } catch(e) {
+      console.warn("AllDone: quotes not found for month", month, e);
+    }
+
+    allDoneEmojiEl.textContent = q.emoji;
+    allDoneTitleEl.textContent = q.title;
+    allDoneSubEl.innerHTML     = q.sub;
     allDoneOverlay.classList.add("is-open");
     allDoneOverlay.setAttribute("aria-hidden","false");
   }
+
   function hideAllDonePopup(){
     allDoneOverlay.classList.remove("is-open");
     allDoneOverlay.setAttribute("aria-hidden","true");
   }
-  allDoneCloseBtn.addEventListener("click", () => {
-    hideAllDonePopup();
-  });
+  allDoneCloseBtn.addEventListener("click", hideAllDonePopup);
 
   // ===== SUCCESS POPUP =====
-  (function(){
-    const overlay=document.getElementById("successOverlay");
-    const textEl=document.getElementById("successText");
-    let autoTimer=null;
-    const POPUP_MS=2500;
-    window.showSuccessPopup=function(message="บันทึกข้อมูลเรียบร้อย",ms=POPUP_MS){
-      textEl.textContent=message;
-      overlay.classList.add("is-open");
-      overlay.setAttribute("aria-hidden","false");
-      clearTimeout(autoTimer);
-      autoTimer=setTimeout(window.hideSuccessPopup,ms);
-    };
-    window.hideSuccessPopup=function(){
-      overlay.classList.remove("is-open");
-      overlay.setAttribute("aria-hidden","true");
-    };
-    document.addEventListener("keydown",(e)=>{if(e.key==="Escape")window.hideSuccessPopup();});
-    window.__POPUP_MS__=POPUP_MS;
-  })();
+  const successOverlay = document.getElementById("successOverlay");
+  const successTextEl  = document.getElementById("successText");
+  let successTimer = null;
+  const POPUP_MS = 2500;
+
+  window.showSuccessPopup = function(message="บันทึกข้อมูลเรียบร้อย", ms=POPUP_MS){
+    successTextEl.textContent = message;
+    successOverlay.classList.add("is-open");
+    successOverlay.setAttribute("aria-hidden","false");
+    clearTimeout(successTimer);
+    successTimer = setTimeout(window.hideSuccessPopup, ms);
+  };
+  window.hideSuccessPopup = function(){
+    successOverlay.classList.remove("is-open");
+    successOverlay.setAttribute("aria-hidden","true");
+  };
+  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") window.hideSuccessPopup(); });
+  window.__POPUP_MS__ = POPUP_MS;
 
   // ===== SUBMIT =====
   const form = document.getElementById("f");
@@ -730,26 +708,22 @@
         msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
         window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
 
-        // จำชื่อและ status จาก server response
-        const savedName = (nameSel.value || "").trim();
+        const savedName   = (nameSel.value || "").trim();
         const savedStatus = out.status || null;
 
-        // อัปเดต prefetchCache ด้วย status ล่าสุดจาก server ทันที (ไม่ยิง API ใหม่)
         if(savedStatus && savedName){
           if(!prefetchCache) prefetchCache = { date: getTodayISO(), data: {} };
           prefetchCache.data[savedName] = savedStatus;
         }
         delete fallbackCache[savedName + "|" + getTodayISO()];
 
-        // reset form
         form.reset();
         buildLogDateOptions();
 
-        // v2.7: re-select ชื่อเดิม + แสดง status จาก server response ทันที, dot คงเขียว
         if(savedName && savedStatus){
           nameSel.value = savedName;
           showStatusResult(savedStatus);
-          setDot("ready"); // dot คงเขียวไว้ ไม่ต้องยิง API ใหม่
+          setDot("ready");
         } else if(savedName && prefetchCache && prefetchCache.date === getTodayISO()){
           nameSel.value = savedName;
           showStatusResult(prefetchCache.data[savedName] || {
