@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="th">
 <head>
@@ -137,6 +138,15 @@
       cursor:pointer;width:auto;transition:opacity .2s;
     }
     .alldone-btn:hover{ opacity:.85; }
+
+    /* ===== Quote Author (All Done Popup) ===== */
+    .quote-author {
+      font-size: 13px;
+      color: rgba(234,240,255,.45);
+      margin: 6px 0 0 0;
+      font-style: italic;
+      letter-spacing: .3px;
+    }
 
     /* ===== Greeting Splash ===== */
     #greetSplash{
@@ -310,7 +320,7 @@
     <div class="alldone-card">
       <div class="alldone-emoji" id="allDoneEmoji">🧘</div>
       <p class="alldone-title" id="allDoneTitle">วันนี้คุณทำสมาธิครบแล้ว!</p>
-      <p class="alldone-sub"   id="allDoneSub">ทำสมาธิครบ 3 ครั้งในวันนี้แล้ว<br>ขอบคุณที่ดูแลตัวเองทุกวัน 🙏</p>
+      <p class="alldone-sub" id="allDoneSub">ทำสมาธิครบ 3 ครั้งในวันนี้แล้ว<br>ขอบคุณที่ดูแลตัวเองทุกวัน 🙏</p>
       <button class="alldone-btn" id="allDoneCloseBtn">รับทราบ</button>
     </div>
   </div>
@@ -627,64 +637,79 @@
     fetchStatusFallback(name, logDate);
   });
 
-  // ===== ALL DONE POPUP =====
+  // ===== ALL DONE POPUP ===== (ดึงจาก quotes/month-XX.js)
   const allDoneOverlay   = document.getElementById("allDoneOverlay");
   const allDoneCloseBtn  = document.getElementById("allDoneCloseBtn");
   const allDoneEmojiEl   = document.getElementById("allDoneEmoji");
   const allDoneTitleEl   = document.getElementById("allDoneTitle");
   const allDoneSubEl     = document.getElementById("allDoneSub");
 
-  // fallback กรณีโหลด quotes ไม่ได้
-  const ALLDONE_FALLBACK = { emoji:"🧘", title:"วันนี้ทำสมาธิครบแล้ว!", sub:"จิตใจสงบ พร้อมรับทุกสิ่ง 🙏" };
+  // ดึงข้อความจากไฟล์ quotes ตามเดือน + วันที่ปัจจุบัน
+  async function showAllDonePopup() {
+    const now   = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, "0"); // "03", "04", ...
+    const day   = now.getDate(); // 1–31
 
-  async function showAllDonePopup(){
-    const now    = new Date();
-    const month  = String(now.getMonth() + 1).padStart(2, "0");
-    const day    = now.getDate(); // 1–31
-    let q = ALLDONE_FALLBACK;
+    // ล้าง author เก่าที่อาจถูกสร้างค้างไว้
+    const oldAuthor = allDoneSubEl.parentNode.querySelector(".quote-author");
+    if (oldAuthor) oldAuthor.remove();
 
     try {
-      const mod    = await import(`./quotes/month-${month}.js`);
-      const quotes = mod.quotes;
-      // วันที่ 1 = index 0, วันที่ 18 = index 17
+      const mod = await import(`./quotes/month-${month}.js`);
+      const quotes = mod.quotes || [];
+      if (!quotes.length) throw new Error("no_quotes");
+
       const idx = Math.min(day - 1, quotes.length - 1);
-      q = quotes[idx];
-    } catch(e) {
-      console.warn("AllDone: quotes not found for month", month, e);
+      const q   = quotes[idx];
+
+      allDoneEmojiEl.textContent = q.emoji || "🧘";
+      allDoneTitleEl.textContent = q.title || "วันนี้คุณทำสมาธิครบแล้ว!";
+      allDoneSubEl.textContent   = q.quote || "";
+
+      if (q.author) {
+        const authorEl = document.createElement("p");
+        authorEl.className = "quote-author";
+        authorEl.textContent = `— ${q.author}`;
+        allDoneSubEl.parentNode.insertBefore(authorEl, allDoneCloseBtn);
+      }
+    } catch (e) {
+      // fallback เดิมถ้าไฟล์ quotes หาย
+      allDoneEmojiEl.textContent = "🧘";
+      allDoneTitleEl.textContent = "วันนี้คุณทำสมาธิครบแล้ว!";
+      allDoneSubEl.innerHTML     = "ทำสมาธิครบ 3 ครั้งในวันนี้แล้ว<br>ขอบคุณที่ดูแลตัวเองทุกวัน 🙏";
     }
 
-    allDoneEmojiEl.textContent = q.emoji;
-    allDoneTitleEl.textContent = q.title;
-    allDoneSubEl.innerHTML     = q.sub;
     allDoneOverlay.classList.add("is-open");
-    allDoneOverlay.setAttribute("aria-hidden","false");
+    allDoneOverlay.setAttribute("aria-hidden", "false");
   }
 
-  function hideAllDonePopup(){
+  function hideAllDonePopup() {
     allDoneOverlay.classList.remove("is-open");
-    allDoneOverlay.setAttribute("aria-hidden","true");
+    allDoneOverlay.setAttribute("aria-hidden", "true");
   }
+
   allDoneCloseBtn.addEventListener("click", hideAllDonePopup);
 
   // ===== SUCCESS POPUP =====
-  const successOverlay = document.getElementById("successOverlay");
-  const successTextEl  = document.getElementById("successText");
-  let successTimer = null;
-  const POPUP_MS = 2500;
-
-  window.showSuccessPopup = function(message="บันทึกข้อมูลเรียบร้อย", ms=POPUP_MS){
-    successTextEl.textContent = message;
-    successOverlay.classList.add("is-open");
-    successOverlay.setAttribute("aria-hidden","false");
-    clearTimeout(successTimer);
-    successTimer = setTimeout(window.hideSuccessPopup, ms);
-  };
-  window.hideSuccessPopup = function(){
-    successOverlay.classList.remove("is-open");
-    successOverlay.setAttribute("aria-hidden","true");
-  };
-  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") window.hideSuccessPopup(); });
-  window.__POPUP_MS__ = POPUP_MS;
+  (function(){
+    const overlay=document.getElementById("successOverlay");
+    const textEl=document.getElementById("successText");
+    let autoTimer=null;
+    const POPUP_MS=2500;
+    window.showSuccessPopup=function(message="บันทึกข้อมูลเรียบร้อย",ms=POPUP_MS){
+      textEl.textContent=message;
+      overlay.classList.add("is-open");
+      overlay.setAttribute("aria-hidden","false");
+      clearTimeout(autoTimer);
+      autoTimer=setTimeout(window.hideSuccessPopup,ms);
+    };
+    window.hideSuccessPopup=function(){
+      overlay.classList.remove("is-open");
+      overlay.setAttribute("aria-hidden","true");
+    };
+    document.addEventListener("keydown",(e)=>{if(e.key==="Escape")window.hideSuccessPopup();});
+    window.__POPUP_MS__=POPUP_MS;
+  })();
 
   // ===== SUBMIT =====
   const form = document.getElementById("f");
@@ -708,18 +733,20 @@
         msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
         window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
 
-        const savedName   = (nameSel.value || "").trim();
+        // อัปเดต prefetchCache
+        const savedName = (nameSel.value || "").trim();
         const savedStatus = out.status || null;
-
         if(savedStatus && savedName){
           if(!prefetchCache) prefetchCache = { date: getTodayISO(), data: {} };
           prefetchCache.data[savedName] = savedStatus;
         }
         delete fallbackCache[savedName + "|" + getTodayISO()];
 
+        // reset form
         form.reset();
         buildLogDateOptions();
 
+        // re-select ชื่อเดิม + แสดง status ใหม่
         if(savedName && savedStatus){
           nameSel.value = savedName;
           showStatusResult(savedStatus);
