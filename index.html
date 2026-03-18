@@ -669,7 +669,7 @@
       if (q.author) {
         const authorEl = document.createElement("p");
         authorEl.className = "quote-author";
-        authorEl.textContent = `— ${q.author}`;
+        authorEl.textContent = `${q.author}`;
         allDoneSubEl.parentNode.insertBefore(authorEl, allDoneCloseBtn);
       }
     } catch (e) {
