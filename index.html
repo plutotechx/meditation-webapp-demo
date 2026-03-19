@@ -652,8 +652,9 @@
   const allDoneSubEl     = document.getElementById("allDoneSub");
 
   // ดึงข้อความจากไฟล์ quotes ตามเดือน + วันที่ปัจจุบัน
-  async function showAllDonePopup() {const oldDetail = allDoneSubEl.parentNode.querySelector(".quote-detail");
-if (oldDetail) oldDetail.remove();
+  async function showAllDonePopup() {
+    const oldDetail = allDoneSubEl.parentNode.querySelector(".quote-detail");
+    if (oldDetail) oldDetail.remove();
     const now   = new Date();
     const month = String(now.getMonth() + 1).padStart(2, "0"); // "03", "04", ...
     const day   = now.getDate(); // 1–31
@@ -666,19 +667,19 @@ if (oldDetail) oldDetail.remove();
       const mod = await import(`./quotes/month-${month}.js`);
       const quotes = mod.quotes || [];
       if (!quotes.length) throw new Error("no_quotes");
-if (q.detail) {
-  const detailEl = document.createElement("p");
-  detailEl.className = "quote-detail";
-  detailEl.textContent = q.detail;
-  allDoneSubEl.parentNode.insertBefore(detailEl, allDoneCloseBtn);
-}
-      
       const idx = Math.min(day - 1, quotes.length - 1);
       const q   = quotes[idx];
 
       allDoneEmojiEl.textContent = q.emoji || "🧘";
       allDoneTitleEl.textContent = q.title || "วันนี้คุณทำสมาธิครบแล้ว!";
       allDoneSubEl.textContent   = q.quote || "";
+
+      if (q.detail) {
+        const detailEl = document.createElement("p");
+        detailEl.className = "quote-detail";
+        detailEl.textContent = q.detail;
+        allDoneSubEl.parentNode.insertBefore(detailEl, allDoneCloseBtn);
+      }
 
       if (q.author) {
         const authorEl = document.createElement("p");
