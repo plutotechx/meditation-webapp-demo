@@ -1,6 +1,32 @@
+// functions/api/submit.js — v3.0
+// =====================================================================
+// CHANGELOG v1 → v3.0:
+//   [FIX] เพิ่ม retry 1 ครั้ง เมื่อ GAS timeout (cold start protection)
+//   [FIX] เพิ่ม timeout เป็น 28s (จาก 25s) — GAS อาจใช้เวลา 20s+ ตอน cold start
+//   [FIX] retry delay 2s ก่อน retry ครั้งที่ 2
+//   [FIX] error message ที่ชัดเจนขึ้น สำหรับแต่ละ case
+//   [FIX] เพิ่ม x-retry-count header เพื่อ debug
+// =====================================================================
+
 import { json } from "./_util.js";
 
-const FETCH_TIMEOUT = 25000; // เพิ่ม timeout รองรับ GAS cold start
+const FETCH_TIMEOUT  = 28000; // 28s — เผื่อ GAS cold start
+const RETRY_DELAY_MS = 2000;  // รอ 2 วินาที ก่อน retry
+const MAX_RETRIES    = 1;     // retry สูงสุด 1 ครั้ง (รวม = 2 attempts)
+
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
 
 export async function onRequestPost(ctx) {
   const { request, env } = ctx;
@@ -18,6 +44,7 @@ export async function onRequestPost(ctx) {
       return json({ ok: false, error: "missing_env" }, 500);
     }
 
+    // ── Validate timezone ──
     const DRIFT_MINUTES = 10;
     const MS_PER_MIN    = 60 * 1000;
 
@@ -73,6 +100,7 @@ export async function onRequestPost(ctx) {
       }, 400);
     }
 
+    // ── Payload to GAS ──
     const payload = {
       secret: SECRET,
       name, logDate,
@@ -82,27 +110,71 @@ export async function onRequestPost(ctx) {
       tzOffsetMin: off
     };
 
+    // ── Fetch with retry ──
     let res, out;
-    try {
-      const ctrl  = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
+    let lastError = null;
+    let attempts = 0;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      attempts = attempt + 1;
+
+      // รอก่อน retry (ไม่รอตอน attempt แรก)
+      if (attempt > 0) {
+        await sleep(RETRY_DELAY_MS);
+      }
+
       try {
-        res = await fetch(GAS_URL, {
+        res = await fetchWithTimeout(GAS_URL, {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify(payload),
-          signal:  ctrl.signal,
-        });
+        }, FETCH_TIMEOUT);
+
         out = await res.json().catch(() => ({}));
-      } finally {
-        clearTimeout(timer);
+
+        // ✅ สำเร็จ — break ออกจาก loop
+        if (res.ok && out.ok !== false) break;
+
+        // GAS ตอบกลับแต่มี error — ถ้าเป็น server_busy ให้ retry
+        if (out.error === "server_busy_retry" && attempt < MAX_RETRIES) {
+          lastError = "server_busy_retry";
+          continue;
+        }
+
+        // GAS ตอบ error อื่น — ไม่ต้อง retry
+        break;
+
+      } catch (fetchErr) {
+        const isTimeout = fetchErr?.name === "AbortError";
+        lastError = isTimeout ? "gas_timeout" : String(fetchErr);
+
+        // ถ้า timeout + ยังเหลือ retry → ลองอีกครั้ง
+        if (isTimeout && attempt < MAX_RETRIES) {
+          continue;
+        }
+
+        // หมด retry แล้ว
+        return json({
+          ok: false,
+          error: lastError,
+          attempts,
+          hint: isTimeout
+            ? "เซิร์ฟเวอร์ตอบช้า กรุณาลองกดบันทึกอีกครั้ง"
+            : "เกิดข้อผิดพลาดในการเชื่อมต่อ"
+        }, 504);
       }
-    } catch (fetchErr) {
-      const isTimeout = fetchErr?.name === "AbortError";
-      return json({ ok: false, error: isTimeout ? "gas_timeout" : String(fetchErr) }, 500);
     }
 
-    return json(out, res.ok ? 200 : 500);
+    // ── Return response ──
+    const status = res?.ok ? 200 : 500;
+    const headers = {
+      "Content-Type":                "application/json; charset=utf-8",
+      "Cache-Control":               "no-store",
+      "Access-Control-Allow-Origin": "*",
+      "X-Attempts":                  String(attempts),
+    };
+
+    return new Response(JSON.stringify(out), { status, headers });
 
   } catch (e) {
     return json({ ok: false, error: String(e) }, 500);
