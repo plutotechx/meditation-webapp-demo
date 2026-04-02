@@ -6,20 +6,22 @@
 //   [UNCHANGED] ทุกอย่างอื่นเหมือนเดิม
 // =====================================================================
 
-import { json } from "./_util.js";
+import { getEnv, json } from "./_util.js";
 
 const CACHE_TTL_SECONDS = 20;   // ✅ v3.0: ลดจาก 55 → 20 วินาที
 const FETCH_TIMEOUT_MS  = 9000;
 
-export async function onRequestGet({ request, env }) {
+export async function onRequestGet(ctx) {
   try {
+    const { request } = ctx;
     const url     = new URL(request.url);
     const logDate = (url.searchParams.get("logDate") || "").trim();
 
     if (!logDate)
       return json({ ok: false, error: "missing_logDate" }, 400);
-    if (!env.GAS_URL || !env.SECRET)
-      return json({ ok: false, error: "missing_env" }, 500);
+
+    const GAS_URL = getEnv(ctx, "GAS_URL");
+    const SECRET  = getEnv(ctx, "SECRET");
 
     // ✅ v3.0: ถ้ามี _bust → ข้าม cache (index.html ส่งมาหลัง submit สำเร็จ)
     const hasBust = url.searchParams.has("_bust");
@@ -39,9 +41,9 @@ export async function onRequestGet({ request, env }) {
     }
 
     // ── ยิง GAS ──
-    const gas = new URL(env.GAS_URL);
+    const gas = new URL(GAS_URL);
     gas.searchParams.set("action",  "getAllStatus");
-    gas.searchParams.set("secret",  env.SECRET);
+    gas.searchParams.set("secret",  SECRET);
     gas.searchParams.set("logDate", logDate);
 
     const controller = new AbortController();
@@ -69,10 +71,17 @@ export async function onRequestGet({ request, env }) {
       },
     });
 
-    cache.put(cacheKey, response.clone());
+    if (typeof ctx.waitUntil === "function") {
+      ctx.waitUntil(cache.put(cacheKey, response.clone()));
+    } else {
+      await cache.put(cacheKey, response.clone());
+    }
     return response;
 
   } catch (e) {
+    if (String(e).startsWith("Error: missing_env:")) {
+      return json({ ok: false, error: "missing_env" }, 500);
+    }
     const msg = e?.name === "AbortError" ? "gas_timeout" : String(e);
     return json({ ok: false, error: msg }, 500);
   }
