@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="th">
 <head>
@@ -349,6 +348,11 @@
   const skipGreet = sessionStorage.getItem(SKIP_GREET_KEY) === "1";
   sessionStorage.removeItem(SKIP_GREET_KEY);
 
+  // ✅ v3.0: ตรวจว่าเพิ่งบันทึกสำเร็จมาหรือเปล่า → ถ้าใช่ ข้าม Cloudflare cache
+  const JUST_SUBMITTED_KEY = "justSubmitted";
+  const justSubmitted = sessionStorage.getItem(JUST_SUBMITTED_KEY) === "1";
+  sessionStorage.removeItem(JUST_SUBMITTED_KEY);
+
   (function(){
     const splash = document.getElementById("greetSplash");
 
@@ -493,7 +497,8 @@
     }
   }
 
-  prefetchPromise = prefetchToday().then(pc => {
+  // ✅ v3.0: ถ้าเพิ่ง submit มา → bustCache=true → ข้าม Cloudflare cache 55 วิ
+  prefetchPromise = prefetchToday(justSubmitted).then(pc => {
     if(pc && nameSel.value){
       const name = nameSel.value.trim();
       if(name){
@@ -644,22 +649,20 @@
     fetchStatusFallback(name, logDate);
   });
 
-  // ===== ALL DONE POPUP ===== (ดึงจาก quotes/month-XX.js)
+  // ===== ALL DONE POPUP =====
   const allDoneOverlay   = document.getElementById("allDoneOverlay");
   const allDoneCloseBtn  = document.getElementById("allDoneCloseBtn");
   const allDoneEmojiEl   = document.getElementById("allDoneEmoji");
   const allDoneTitleEl   = document.getElementById("allDoneTitle");
   const allDoneSubEl     = document.getElementById("allDoneSub");
 
-  // ดึงข้อความจากไฟล์ quotes ตามเดือน + วันที่ปัจจุบัน
   async function showAllDonePopup() {
     const oldDetail = allDoneSubEl.parentNode.querySelector(".quote-detail");
     if (oldDetail) oldDetail.remove();
     const now   = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, "0"); // "03", "04", ...
-    const day   = now.getDate(); // 1–31
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day   = now.getDate();
 
-    // ล้าง author เก่าที่อาจถูกสร้างค้างไว้
     const oldAuthor = allDoneSubEl.parentNode.querySelector(".quote-author");
     if (oldAuthor) oldAuthor.remove();
 
@@ -688,7 +691,6 @@
         allDoneSubEl.parentNode.insertBefore(authorEl, allDoneCloseBtn);
       }
     } catch (e) {
-      // fallback เดิมถ้าไฟล์ quotes หาย
       allDoneEmojiEl.textContent = "🧘";
       allDoneTitleEl.textContent = "วันนี้คุณทำสมาธิครบแล้ว!";
       allDoneSubEl.innerHTML     = "ทำสมาธิครบ 3 ครั้งในวันนี้แล้ว<br>ขอบคุณที่ดูแลตัวเองทุกวัน 🙏";
@@ -756,6 +758,9 @@
           prefetchCache.data[savedName] = savedStatus;
         }
         delete fallbackCache[savedName + "|" + getTodayISO()];
+
+        // ✅ v3.0: ตั้ง flag ให้รอบหน้าที่โหลด ข้าม cache ทันที
+        sessionStorage.setItem(JUST_SUBMITTED_KEY, "1");
 
         // reset form
         form.reset();
