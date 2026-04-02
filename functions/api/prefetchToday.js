@@ -1,15 +1,9 @@
 // functions/api/prefetchToday.js — v3.0
 // =====================================================================
-// CHANGELOG:
-//   [FIX 1] ลด CACHE_TTL จาก 55 วินาที → 20 วินาที
-//           → ข้อมูลเก่าหมดอายุเร็วขึ้น แม้ไม่มี _bust ก็รอไม่นาน
-//
-//   [FIX 2] ถ้า URL มี _bust parameter → ข้าม Cloudflare cache ทันที
-//           → index.html v3.0 จะส่ง _bust มาหลังจากเพิ่งบันทึกสำเร็จ
-//           → ได้ข้อมูลใหม่ล่าสุดจาก GAS โดยไม่ต้องรอ cache หมดอายุ
-//
-//   [UNCHANGED] GAS endpoint, error handling, response format
-//               → ไม่กระทบ status.html, dashboard.html, report-weekly.html
+// CHANGELOG v1 → v3.0:
+//   [FIX 1] ลด CACHE_TTL จาก 55 → 20 วินาที
+//   [FIX 2] ถ้า URL มี _bust parameter → ข้าม Cloudflare cache
+//   [UNCHANGED] ทุกอย่างอื่นเหมือนเดิม
 // =====================================================================
 
 import { json } from "./_util.js";
@@ -27,22 +21,24 @@ export async function onRequestGet({ request, env }) {
     if (!env.GAS_URL || !env.SECRET)
       return json({ ok: false, error: "missing_env" }, 500);
 
-    // ✅ v3.0: ถ้ามี _bust parameter → ข้าม cache ทันที (ไปเรียก GAS ตรง)
+    // ✅ v3.0: ถ้ามี _bust → ข้าม cache (index.html ส่งมาหลัง submit สำเร็จ)
     const hasBust = url.searchParams.has("_bust");
 
+    // ── Cloudflare Cache ──
+    // ใช้ cache key ที่มีแค่ logDate (ไม่มี _bust) เพื่อให้ทุก request ใช้ cache ร่วมกัน
+    const cache    = caches.default;
+    const cacheKey = new Request(
+      `${url.origin}${url.pathname}?logDate=${encodeURIComponent(logDate)}`,
+      { method: "GET" }
+    );
+
+    // ถ้าไม่มี _bust → ลองใช้ cache ก่อน
     if (!hasBust) {
-      // ลอง Cloudflare Cache ก่อน (เฉพาะกรณีไม่มี _bust)
-      const cache    = caches.default;
-      const cacheKey = new Request(
-        // ✅ สร้าง cache key จาก logDate อย่างเดียว (ไม่รวม _bust)
-        `https://cache.internal/prefetchToday?logDate=${encodeURIComponent(logDate)}`,
-        { method: "GET" }
-      );
       const cached = await cache.match(cacheKey);
       if (cached) return cached;
     }
 
-    // ยิง GAS
+    // ── ยิง GAS ──
     const gas = new URL(env.GAS_URL);
     gas.searchParams.set("action",  "getAllStatus");
     gas.searchParams.set("secret",  env.SECRET);
@@ -63,7 +59,7 @@ export async function onRequestGet({ request, env }) {
       return json({ ok: false, error: out.error || `upstream_${res.status}` }, 500);
     }
 
-    // ✅ เก็บ cache (ใช้ cache key ที่ไม่มี _bust เพื่อให้ request ถัดไปใช้ได้)
+    // ── เก็บ cache ใหม่ (ทั้งกรณี _bust และไม่มี) ──
     const response = new Response(JSON.stringify(out), {
       status: 200,
       headers: {
@@ -73,14 +69,7 @@ export async function onRequestGet({ request, env }) {
       },
     });
 
-    // ✅ เก็บ cache ด้วย key ที่ไม่มี _bust → ครั้งถัดไปที่ไม่มี _bust จะได้ข้อมูลใหม่
-    const cache    = caches.default;
-    const cacheKey = new Request(
-      `https://cache.internal/prefetchToday?logDate=${encodeURIComponent(logDate)}`,
-      { method: "GET" }
-    );
     cache.put(cacheKey, response.clone());
-
     return response;
 
   } catch (e) {
