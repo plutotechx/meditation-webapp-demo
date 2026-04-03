@@ -478,23 +478,24 @@
     const logDate = getTodayISO();
     if(!bustCache && prefetchCache && prefetchCache.date === logDate) return prefetchCache;
     setDot("loading");
-    try{
-      const q = new URLSearchParams({ logDate });
-      if(bustCache) q.set("_bust", Date.now().toString());
-      const res = await fetch(`/api/prefetchToday?${q}`);
-      const out = await res.json().catch(()=>({}));
-      if(out.ok !== false && out.data){
-        prefetchCache = { date: logDate, data: out.data };
-        setDot("ready");
-        return prefetchCache;
-      } else {
-        setDot("error");
-        return null;
+    for(let attempt=0; attempt<2; attempt++){
+      try{
+        if(attempt>0) await new Promise(r=>setTimeout(r, 1200));
+        const q = new URLSearchParams({ logDate });
+        if(bustCache) q.set("_bust", Date.now().toString());
+        const res = await fetch(`/api/prefetchToday?${q}`);
+        const out = await res.json().catch(()=>({}));
+        if(out.ok !== false && out.data){
+          prefetchCache = { date: logDate, data: out.data };
+          setDot("ready");
+          return prefetchCache;
+        }
+      }catch(e){
+        // retry
       }
-    }catch(e){
-      setDot("error");
-      return null;
     }
+    setDot("error");
+    return null;
   }
 
   // ✅ v3.0: ถ้าเพิ่ง submit มา → bustCache=true → ข้าม Cloudflare cache 55 วิ
@@ -613,7 +614,7 @@
       const q=new URLSearchParams({name,logDate});
       const res=await fetch(`/api/checkStatus?${q}`,{signal:fallbackAbort.signal});
       const out=await res.json().catch(()=>({}));
-      if(out.ok!==false){ fallbackCache[cacheKey]=out; showStatusResult(out); }
+      if(out.ok!==false){ fallbackCache[cacheKey]=out; showStatusResult(out); setDot("ready"); }
       else showStatusError();
     }catch(e){ if(e.name==="AbortError")return; showStatusError(); }
   }
@@ -749,7 +750,7 @@
         msg.className="msg ok";
         msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
         window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
-
+แ
         // อัปเดต prefetchCache
         const savedName = (nameSel.value || "").trim();
         const savedStatus = out.status || null;
