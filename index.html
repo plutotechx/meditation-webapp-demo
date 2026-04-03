@@ -513,6 +513,9 @@
     return pc;
   });
 
+  // ===== ESCAPE HTML =====
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+
   // ===== SESSION DROPDOWN =====
   const sessionSel = document.getElementById("sessionSel");
 
@@ -576,7 +579,7 @@
       const icon=ok
         ?`<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 7L10.5 16.5L4 10" stroke="#65ffb3" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`
         :`<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#ff6a6a" stroke-width="2.8" stroke-linecap="round"/></svg>`;
-      const timeStr=(st.time&&st.time!=="—")?`<div class="sbox-time">${st.time} น.</div>`:`<div class="sbox-time">—</div>`;
+      const timeStr=(st.time&&st.time!=="—")?`<div class="sbox-time">${escapeHtml(st.time)} น.</div>`:`<div class="sbox-time">—</div>`;
       return `<div class="sbox ${cls}"><div class="sbox-title">${title}</div>${icon}${timeStr}</div>`;
     }
     const sumCls=doneCount===3?"all":doneCount===0?"none":"";
