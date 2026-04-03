@@ -138,7 +138,6 @@
     }
     .alldone-btn:hover{ opacity:.85; }
 
-    /* ===== Quote Author (All Done Popup) ===== */
     .quote-detail {
       font-size: 13px;
       color: rgba(234,240,255,.62);
@@ -205,11 +204,11 @@
   <div id="greetSplash">
     <div class="greet-card">
       <div class="greet-emoji" id="greetEmoji"></div>
-      <p  class="greet-msg"     id="greetMsg"></p>
-      <p  class="greet-special" id="greetSpecial" style="display:none"></p>
-      <p  class="greet-date"    id="greetDate"></p>
-      <p  class="greet-sub"     id="greetSub"></p>
-      <div class="greet-bar"    id="greetBar"></div>
+      <p class="greet-msg" id="greetMsg"></p>
+      <p class="greet-special" id="greetSpecial" style="display:none"></p>
+      <p class="greet-date" id="greetDate"></p>
+      <p class="greet-sub" id="greetSub"></p>
+      <div class="greet-bar" id="greetBar"></div>
     </div>
   </div>
 
@@ -268,7 +267,6 @@
           <option>เอกพจน์ (เอก)</option>
         </select>
 
-        <!-- ===== STATUS BAR ===== -->
         <div id="statusBar">
           <div class="status-boxes" id="statusBoxes"></div>
         </div>
@@ -307,7 +305,6 @@
     </div>
   </div>
 
-  <!-- Success Popup -->
   <div id="successOverlay" class="success-overlay" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="success-card">
       <div class="success-content">
@@ -321,7 +318,6 @@
     </div>
   </div>
 
-  <!-- All Done Popup -->
   <div id="allDoneOverlay" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="alldone-card">
       <div class="alldone-emoji" id="allDoneEmoji">🧘</div>
@@ -332,7 +328,6 @@
   </div>
 
 <script type="module">
-  // ===== DATE UTILS =====
   function pad2(n){ return String(n).padStart(2,"0"); }
   function toISODateLocal(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
   function thaiDateLabelLocal(d){ return d.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"}); }
@@ -343,12 +338,10 @@
   }
   function getTodayISO(){ return toISODateLocal(new Date()); }
 
-  // ===== GREETING SPLASH =====
   const SKIP_GREET_KEY = "skipGreetOnce";
   const skipGreet = sessionStorage.getItem(SKIP_GREET_KEY) === "1";
   sessionStorage.removeItem(SKIP_GREET_KEY);
 
-  // ✅ v3.0: ตรวจว่าเพิ่งบันทึกสำเร็จมาหรือเปล่า → ถ้าใช่ ข้าม Cloudflare cache
   const JUST_SUBMITTED_KEY = "justSubmitted";
   const justSubmitted = sessionStorage.getItem(JUST_SUBMITTED_KEY) === "1";
   sessionStorage.removeItem(JUST_SUBMITTED_KEY);
@@ -432,7 +425,6 @@
     splash.addEventListener("click", closeSplash);
   })();
 
-  // ===== WEEK HEADER =====
   (function(){
     const now=new Date(), mon=mondayOfWeekLocal(now);
     const sun=new Date(mon); sun.setDate(mon.getDate()+6);
@@ -440,7 +432,6 @@
       `จันทร์ ${thaiDateLabelLocal(mon)} – อาทิตย์ ${thaiDateLabelLocal(sun)}`;
   })();
 
-  // ===== LOG DATE OPTIONS =====
   const logDateEl       = document.getElementById("logDate");
   const weekdayHiddenEl = document.getElementById("weekdayHidden");
   const TH_DOW = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัส","ศุกร์","เสาร์"];
@@ -467,10 +458,20 @@
   logDateEl.addEventListener("change",()=>{ weekdayHiddenEl.value=logDateEl.selectedOptions[0]?.dataset?.dow||""; });
   buildLogDateOptions();
 
-  // ===== PREFETCH ENGINE =====
   const dot = document.getElementById("prefetchDot");
+  const sessionSel = document.getElementById("sessionSel");
+  const statusBar   = document.getElementById("statusBar");
+  const statusBoxes = document.getElementById("statusBoxes");
+  const nameSel     = document.getElementById("nameSel");
+  const form = document.getElementById("f");
+  const btn  = document.getElementById("btn");
+  const msg  = document.getElementById("msg");
+
   let prefetchCache   = null;
   let prefetchPromise = null;
+  let fallbackAbort   = null;
+  let fallbackCache   = {};
+  let allDoneTimer    = null;
 
   function setDot(state){ dot.className=""; dot.classList.add(state); }
 
@@ -478,46 +479,24 @@
     const logDate = getTodayISO();
     if(!bustCache && prefetchCache && prefetchCache.date === logDate) return prefetchCache;
     setDot("loading");
-    for(let attempt=0; attempt<2; attempt++){
-      try{
-        if(attempt>0) await new Promise(r=>setTimeout(r, 1200));
-        const q = new URLSearchParams({ logDate });
-        if(bustCache) q.set("_bust", Date.now().toString());
-        const res = await fetch(`/api/prefetchToday?${q}`);
-        const out = await res.json().catch(()=>({}));
-        if(out.ok !== false && out.data){
-          prefetchCache = { date: logDate, data: out.data };
-          setDot("ready");
-          return prefetchCache;
-        }
-      }catch(e){
-        // retry
+    try{
+      const q = new URLSearchParams({ logDate });
+      if(bustCache) q.set("_bust", Date.now().toString());
+      const res = await fetch(`/api/prefetchToday?${q}`);
+      const out = await res.json().catch(()=>({}));
+      if(out.ok !== false && out.data){
+        prefetchCache = { date: logDate, data: out.data };
+        setDot("ready");
+        return prefetchCache;
+      } else {
+        setDot("error");
+        return null;
       }
+    }catch(e){
+      setDot("error");
+      return null;
     }
-    setDot("error");
-    return null;
   }
-
-  // ✅ v3.0: ถ้าเพิ่ง submit มา → bustCache=true → ข้าม Cloudflare cache
-  prefetchPromise = prefetchToday(justSubmitted).then(pc => {
-    if(pc && nameSel.value){
-      const name = nameSel.value.trim();
-      if(name){
-        const personData = pc.data[name];
-        showStatusResult(personData || {
-          doneCount: 0,
-          sessions: { s1:{mark:"—",time:""}, s2:{mark:"—",time:""}, s3:{mark:"—",time:""} }
-        });
-      }
-    }
-    return pc;
-  });
-
-  // ===== ESCAPE HTML =====
-  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-
-  // ===== SESSION DROPDOWN =====
-  const sessionSel = document.getElementById("sessionSel");
 
   const SESSION_KEYS = [
     { key:"s1", label:"ครั้งที่ 1 / ตื่นนอน-เช้า" },
@@ -551,14 +530,6 @@
       <option value="ครั้งที่ 3 / ก่อนนอน-ค่ำ">ครั้งที่ 3 / ก่อนนอน-ค่ำ</option>`;
   }
 
-  // ===== STATUS BAR =====
-  const statusBar   = document.getElementById("statusBar");
-  const statusBoxes = document.getElementById("statusBoxes");
-  const nameSel     = document.getElementById("nameSel");
-  let fallbackAbort = null;
-  let fallbackCache = {};
-  let allDoneTimer  = null;
-
   function isDone(st){ return st?.mark==="✅" || st?.done===true; }
 
   function showStatusLoading(){
@@ -582,6 +553,7 @@
       const timeStr=(st.time&&st.time!=="—")?`<div class="sbox-time">${escapeHtml(st.time)} น.</div>`:`<div class="sbox-time">—</div>`;
       return `<div class="sbox ${cls}"><div class="sbox-title">${title}</div>${icon}${timeStr}</div>`;
     }
+
     const sumCls=doneCount===3?"all":doneCount===0?"none":"";
     const sumBox=`<div class="sbox"><div class="sbox-title">สรุป</div><div class="sbox-sum-count ${sumCls}">${doneCount}/3</div><div class="sbox-sum-label">${doneCount===3?"ครบแล้ว!":doneCount===0?"ยังไม่มี":"กำลังดี"}</div></div>`;
     statusBoxes.innerHTML=box("ครั้งที่ 1",s1)+box("ครั้งที่ 2",s2)+box("ครั้งที่ 3",s3)+sumBox;
@@ -617,10 +589,32 @@
       const q=new URLSearchParams({name,logDate});
       const res=await fetch(`/api/checkStatus?${q}`,{signal:fallbackAbort.signal});
       const out=await res.json().catch(()=>({}));
-      if(out.ok!==false){ fallbackCache[cacheKey]=out; showStatusResult(out); setDot("ready"); }
+      if(out.ok!==false){ fallbackCache[cacheKey]=out; showStatusResult(out); }
       else showStatusError();
-    }catch(e){ if(e.name==="AbortError")return; showStatusError(); }
+    }catch(e){ if(e.name==="AbortError") return; showStatusError(); }
   }
+
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, ch => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[ch]));
+  }
+
+  prefetchPromise = prefetchToday(justSubmitted).then(pc => {
+    const currentName = (document.getElementById("nameSel")?.value || "").trim();
+    if(pc && currentName){
+      const personData = pc.data[currentName];
+      showStatusResult(personData || {
+        doneCount: 0,
+        sessions: { s1:{mark:"—",time:""}, s2:{mark:"—",time:""}, s3:{mark:"—",time:""} }
+      });
+    }
+    return pc;
+  });
 
   nameSel.addEventListener("change", async () => {
     const name = (nameSel.value || "").trim();
@@ -653,7 +647,6 @@
     fetchStatusFallback(name, logDate);
   });
 
-  // ===== ALL DONE POPUP =====
   const allDoneOverlay   = document.getElementById("allDoneOverlay");
   const allDoneCloseBtn  = document.getElementById("allDoneCloseBtn");
   const allDoneEmojiEl   = document.getElementById("allDoneEmoji");
@@ -711,7 +704,6 @@
 
   allDoneCloseBtn.addEventListener("click", hideAllDonePopup);
 
-  // ===== SUCCESS POPUP =====
   (function(){
     const overlay=document.getElementById("successOverlay");
     const textEl=document.getElementById("successText");
@@ -732,65 +724,75 @@
     window.__POPUP_MS__=POPUP_MS;
   })();
 
-  // ===== SUBMIT =====
-  const form = document.getElementById("f");
-  const btn  = document.getElementById("btn");
-  const msg  = document.getElementById("msg");
+  function refreshUiAfterSubmit(savedName, savedStatus){
+    if(savedStatus && savedName){
+      if(!prefetchCache) prefetchCache = { date: getTodayISO(), data: {} };
+      prefetchCache.data[savedName] = savedStatus;
+    }
+
+    delete fallbackCache[savedName + "|" + getTodayISO()];
+
+    sessionStorage.setItem(JUST_SUBMITTED_KEY, "1");
+
+    form.reset();
+    buildLogDateOptions();
+
+    if(savedName && savedStatus){
+      nameSel.value = savedName;
+      showStatusResult(savedStatus);
+      setDot("ready");
+    } else if(savedName && prefetchCache && prefetchCache.date === getTodayISO()){
+      nameSel.value = savedName;
+      showStatusResult(prefetchCache.data[savedName] || {
+        doneCount: 0,
+        sessions: { s1:{mark:"—",time:""}, s2:{mark:"—",time:""}, s3:{mark:"—",time:""} }
+      });
+      setDot("ready");
+    }
+  }
 
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     btn.disabled=true;
     msg.className="msg";
     msg.textContent="กำลังบันทึกข้อมูล...";
+
     const fd=new FormData(form);
     const payload=Object.fromEntries(fd.entries());
     payload.clientNow=new Date().toISOString();
     payload.tzOffsetMin=new Date().getTimezoneOffset();
+
     try{
-      const res=await fetch("/api/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      const res=await fetch("/api/submit",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(payload)
+      });
+
       const out=await res.json().catch(()=>({}));
-      if(res.ok&&out.ok){
-        msg.className="msg ok";
-        msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
-        window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
 
-        // อัปเดต prefetchCache
-        const savedName = (nameSel.value || "").trim();
-        const savedStatus = out.status || null;
-        if(savedStatus && savedName){
-          if(!prefetchCache) prefetchCache = { date: getTodayISO(), data: {} };
-          prefetchCache.data[savedName] = savedStatus;
-        }
-        delete fallbackCache[savedName + "|" + getTodayISO()];
-
-        // ✅ v3.0: ตั้ง flag ให้รอบหน้าที่โหลด ข้าม cache ทันที
-        sessionStorage.setItem(JUST_SUBMITTED_KEY, "1");
-
-        // reset form
-        form.reset();
-        buildLogDateOptions();
-
-        // re-select ชื่อเดิม + แสดง status ใหม่
-        if(savedName && savedStatus){
-          nameSel.value = savedName;
-          showStatusResult(savedStatus);
-          setDot("ready");
-        } else if(savedName && prefetchCache && prefetchCache.date === getTodayISO()){
-          nameSel.value = savedName;
-          showStatusResult(prefetchCache.data[savedName] || {
-            doneCount: 0,
-            sessions: { s1:{mark:"—",time:""}, s2:{mark:"—",time:""}, s3:{mark:"—",time:""} }
-          });
-          setDot("ready");
-        }
-
-      } else {
+      if(!(res.ok && out.ok)){
         msg.className="msg bad";
-        msg.textContent="บันทึกไม่สำเร็จ ❌ "+(out.error||"unknown_error");
+        msg.textContent="บันทึกไม่สำเร็จ ❌ " + (out.error || "unknown_error");
+        return;
       }
+
+      msg.className="msg ok";
+      msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
+      window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
+
+      const savedName = (payload.name || "").trim();
+      const savedStatus = out.status || null;
+
+      try{
+        refreshUiAfterSubmit(savedName, savedStatus);
+      }catch(uiErr){
+        console.error("Post-submit UI refresh failed:", uiErr);
+      }
+
     }catch(e){
       msg.className="msg bad";
-      msg.textContent="บันทึกไม่สำเร็จ ❌ "+e;
+      msg.textContent="บันทึกไม่สำเร็จ ❌ " + (e?.message || String(e));
     }finally{
       btn.disabled=false;
     }
