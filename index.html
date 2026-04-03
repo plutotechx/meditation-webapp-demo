@@ -140,12 +140,12 @@
 
     /* ===== Quote Author (All Done Popup) ===== */
     .quote-detail {
-  font-size: 13px;
-  color: rgba(234,240,255,.62);
-  line-height: 1.65;
-  margin: 10px 16px 0 16px;
-  font-style: italic;
-}
+      font-size: 13px;
+      color: rgba(234,240,255,.62);
+      line-height: 1.65;
+      margin: 10px 16px 0 16px;
+      font-style: italic;
+    }
     .quote-author {
       font-size: 13px;
       color: rgba(234,240,255,.45);
@@ -498,7 +498,7 @@
     return null;
   }
 
-  // ✅ v3.0: ถ้าเพิ่ง submit มา → bustCache=true → ข้าม Cloudflare cache 55 วิ
+  // ✅ v3.0: ถ้าเพิ่ง submit มา → bustCache=true → ข้าม Cloudflare cache
   prefetchPromise = prefetchToday(justSubmitted).then(pc => {
     if(pc && nameSel.value){
       const name = nameSel.value.trim();
@@ -750,6 +750,7 @@
         msg.className="msg ok";
         msg.textContent="บันทึกข้อมูลเรียบร้อย ✅";
         window.showSuccessPopup("บันทึกข้อมูลเรียบร้อย");
+
         // อัปเดต prefetchCache
         const savedName = (nameSel.value || "").trim();
         const savedStatus = out.status || null;
