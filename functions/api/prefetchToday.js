@@ -9,7 +9,9 @@
 import { getEnv, json } from "./_util.js";
 
 const CACHE_TTL_SECONDS = 20;   // ✅ v3.0: ลดจาก 55 → 20 วินาที
-const FETCH_TIMEOUT_MS  = 9000;
+const FETCH_TIMEOUT_MS  = 15000;
+const RETRY_DELAY_MS    = 1200;
+const MAX_RETRIES       = 1;
 
 export async function onRequestGet(ctx) {
   try {
@@ -46,18 +48,30 @@ export async function onRequestGet(ctx) {
     gas.searchParams.set("secret",  SECRET);
     gas.searchParams.set("logDate", logDate);
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
     let res, out;
-    try {
-      res = await fetch(gas.toString(), { method: "GET", signal: controller.signal });
-      out = await res.json().catch(() => ({}));
-    } finally {
-      clearTimeout(timer);
+    let lastFetchError = null;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+      }
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      try {
+        res = await fetch(gas.toString(), { method: "GET", signal: controller.signal });
+        out = await res.json().catch(() => ({}));
+        if (res.ok && out.ok !== false) break;
+      } catch (fetchErr) {
+        lastFetchError = fetchErr;
+        if (attempt === MAX_RETRIES) throw fetchErr;
+      } finally {
+        clearTimeout(timer);
+      }
     }
 
-    if (!res.ok || out.ok === false) {
+    if ((!res || !res.ok || out?.ok === false) && lastFetchError) {
+      throw lastFetchError;
+    }
+    if (!res || !res.ok || out?.ok === false) {
       return json({ ok: false, error: out.error || `upstream_${res.status}` }, 500);
     }
 
