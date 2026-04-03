@@ -1,4 +1,3 @@
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
 diff --git a/functions/api/prefetchToday.js b/functions/api/prefetchToday.js
 index 1738a7ee37eb6de5c8cd187c0904d96df62c3bfc..6bbcc83090df3a24ca20da6bb0c7d6421ae6bbb0 100644
 --- a/functions/api/prefetchToday.js
@@ -123,6 +122,3 @@ index 1738a7ee37eb6de5c8cd187c0904d96df62c3bfc..6bbcc83090df3a24ca20da6bb0c7d642
      return json({ ok: false, error: msg }, 500);
    }
  }
- 
-EOF
-)
